@@ -361,13 +361,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
     band : str
         GALEX band to use
     ra_ctr : float
-        RA of the center of the galaxy
+        Central RA of galaxy
     dec_ctr : float
-        Dec of the center of the galaxy
+        Central Dec of galaxy
     size_deg : float
         Desired side length of each cutout, in degrees
     index : array, optional
-        Structured array containing the galbase information (Default: None -- we'll read it in here)
+        Structured array containing the galbase information. The default is to read it in inside this code. (Default: None)
     name : str, optional
         Name of the galaxy for which to generate a cutout
     write_info : bool, optional
