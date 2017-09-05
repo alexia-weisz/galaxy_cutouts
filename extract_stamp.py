@@ -27,9 +27,9 @@ def calc_tile_overlap(ra_ctr, dec_ctr, pad=0.0, min_ra=0., max_ra=180., min_dec=
     Parameters
     ----------
     ra_ctr : float
-        Center fo galaxy RA
+        Central RA
     dec_ctr : float
-        Center of galaxy Dec
+        Central Dec
     pad : float, optional
         Size of region about center (Default: 0.0)
     min_ra : float. optional
