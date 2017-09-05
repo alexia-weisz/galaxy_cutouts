@@ -1,0 +1,12 @@
+PRIMARY CODE:
+make_cutouts.py -- primary code: It gathers data from the galbase using gal_data.py (make sure it's either in this directory or that you import it from its current location).
+config.py -- contains the names, types, and default values for the entries in the galbase. If the format of the galbase changes, this will also need to be adjusted.
+make_cutouts.py -- a wrapper around the actual code that generates cutouts
+extract_stamp.py -- the actual code that generates the cutouts. All of the functions required for creating cutouts in GALEX are included in extract_stamp. It also includes a rough go at copying the WISE stamp-making process from that created by Adam Leroy in IDL.
+
+TEST CODE:
+make_single_cutout.py -- test methods in extract_stamp.py. Do not use.
+single_cutout_test.py -- test methods in extract_stamp.py. Do not use.
+single_cutout_test_newmehtod.py -- test methods in extract_stamp.py. Do not use.
+test_known_files.py -- test methods in extract_stamp.py. Do not use.
+new_wget_commands.py -- writes out commands for getting files from the GALEX server for a set of images that make up a single mosaic.
