@@ -4,7 +4,6 @@ import gal_data
 import extract_stamp
 import warnings
 import argparse
-from pdb import set_trace
 
 #_OUT_DIR = '../cutouts/sings/'
 #_MIPS_DIR = '/data/tycho/0/leroy.42/ellohess/data/mips/sings/'
@@ -14,8 +13,8 @@ _TEST_WRITE_DIR = '/n/home00/lewis.1590/research/galbase_allsky/cutouts/'
 _GALDATA_DIR = '/n/home00/lewis.1590/research/galbase/gal_data/'
 
 def get_args():
-    """ Get command line arguments """
-    parser = argparse.ArgumentParser(description='Create cutouts of a given size around each galaxy center.')
+     """ Get command line arguments """
+     parser = argparse.ArgumentParser(description='Create cutouts of a given size around each galaxy center.')
     parser.add_argument('--size', default=30, help='cutout size in arcminutes. Default: 30.')
     parser.add_argument('--band', default=None, help='waveband. Default: None (does all)')
     parser.add_argument('--cutout', action='store_true')
@@ -31,8 +30,8 @@ def get_args():
 
 
 def main(**kwargs):
-    """ Create cutouts using all data and combining images using Montage
-    
+     """ Create cutouts using all data and combining images using Montage
+
     Parameters
     ----------
     size : float
@@ -66,7 +65,9 @@ def main(**kwargs):
     or
 
     import make_cutouts
-    make_cutouts.main(size=30, band='fuv', cutout=True, model_bg=True, tag='SINGS')"""
+    make_cutouts.main(size=30, band='fuv', cutout=True, model_bg=True, tag='SINGS')
+    """
+
     if kwargs['cutout']:
         warnings.filterwarnings('ignore')
         wband = kwargs['band']
@@ -85,7 +86,8 @@ def main(**kwargs):
             galname = str(this_gal.name).replace(' ', '').upper()
 
             if wband == 'fuv':
-                extract_stamp.galex(band='fuv', ra_ctr=this_gal.ra_deg, dec_ctr=this_gal.dec_deg, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
+                if galname == 'NGC2976': 
+                     extract_stamp.galex(band='fuv', ra_ctr=this_gal.ra_deg, dec_ctr=this_gal.dec_deg, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
             elif wband == 'nuv':
                 extract_stamp.galex(band='nuv', ra_ctr=this_gal.ra_deg, dec_ctr=this_gal.dec_deg, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
             else:

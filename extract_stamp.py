@@ -772,7 +772,7 @@ def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=
     imtype : str
         The type of image you are reprojecting; one of [int, rrhr]
     whole : bool, optional
-        Montage argument (Default: False)
+        Montage argument (Default: True)
     exact : bool, optional
         Montage argument (Default: True)
     img_list : list of strs, optional 
