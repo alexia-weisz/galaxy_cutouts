@@ -478,7 +478,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # MODEL THE BACKGROUND IN THE IMAGE FILES?
             if model_bg:
-                im_dir = bg_model(gal_dir, im_dir, hdr_files[1], level_only=True)
+                im_dir = bg_model(gal_dir, im_dir, hdr_files[1])
 
 
             # WEIGHT IMAGES
