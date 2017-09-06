@@ -1,6 +1,4 @@
 import astropy.io.fits
-#from astropy.io import ascii
-#from astropy.table import Table, Column
 import astropy.wcs
 import os
 import sys
@@ -11,12 +9,12 @@ import sys
 import glob
 import time
 from matplotlib.path import Path
-#from scipy.ndimage import zoom
+from pdb import set_trace
 
 
 _TOP_DIR = '/data/tycho/0/leroy.42/allsky/'
 _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
-_HOME_DIR = '/data/tycho/0/lewis.1590/galbase_allsky/'
+_HOME_DIR = '/data/tycho/0/lewis.1590/atlas/'
 _MOSAIC_DIR = os.path.join(_HOME_DIR, 'cutouts')
 
 
@@ -186,60 +184,6 @@ def make_axes(hdr, quiet=False, novec=False, vonly=False, simple=False):
     return rimg, dimg
 
 
-def write_headerfile(header_file, header):
-    """
-    Write out the header for the output mosaiced image
-
-    Parameters
-    ----------
-    header_file : str
-        Path to file to which to write header
-    header : array
-        The header to which to write to ASCII file
-    """
-    f = open(header_file, 'w')
-    for iii in range(len(header)):
-        outline = str(header[iii:iii+1]).strip().rstrip('END').strip()+'\n'
-        f.write(outline)
-    f.close()
-
-
-def create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale):
-    """
-    Create a FITS header
-
-    Parameters
-    ----------
-    ra_ctr : float
-        RA of center of galaxy
-    dec_ctr : float
-        Dec of center of galaxy
-    pix_len : float
-        Length of each axis (square, so the same for x and y)
-    pix_scale : float
-        Pixel scale in degrees
-
-    Returns
-    -------
-    hdr : astropy Header() object
-        Newly created header object
-    """
-    hdr = astropy.io.fits.Header()
-    hdr['NAXIS'] = 2
-    hdr['NAXIS1'] = pix_len
-    hdr['NAXIS2'] = pix_len
-    hdr['CTYPE1'] = 'RA---TAN'
-    hdr['CRVAL1'] = float(ra_ctr)
-    hdr['CRPIX1'] = (pix_len / 2.) * 1.
-    hdr['CDELT1'] = -1.0 * pix_scale
-    hdr['CTYPE2'] = 'DEC--TAN'
-    hdr['CRVAL2'] = float(dec_ctr)
-    hdr['CRPIX2'] = (pix_len / 2.) * 1.
-    hdr['CDELT2'] = pix_scale
-    hdr['EQUINOX'] = 2000
-    return hdr
-
-
 def unwise(band=None, ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None):
     tel = 'unwise'
     data_dir = os.path.join(_TOP_DIR, tel, 'sorted_tiles')
@@ -352,6 +296,60 @@ def counts2jy(norm_mag, calibration_value, pix_as):
     return val
 
 
+def write_headerfile(header_file, header):
+    """
+    Write out the header for the output mosaiced image
+
+    Parameters
+    ----------
+    header_file : str
+        Path to file to which to write header
+    header : array
+        The header to which to write to ASCII file
+    """
+    f = open(header_file, 'w')
+    for iii in range(len(header)):
+        outline = str(header[iii:iii+1]).strip().rstrip('END').strip()+'\n'
+        f.write(outline)
+    f.close()
+
+
+def create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale):
+    """
+    Create a FITS header
+
+    Parameters
+    ----------
+    ra_ctr : float
+        RA of center of galaxy
+    dec_ctr : float
+        Dec of center of galaxy
+    pix_len : float
+        Length of each axis (square, so the same for x and y)
+    pix_scale : float
+        Pixel scale in degrees
+
+    Returns
+    -------
+    hdr : astropy Header() object
+        Newly created header object
+    """
+    hdr = astropy.io.fits.Header()
+    hdr['NAXIS'] = 2
+    hdr['NAXIS1'] = pix_len
+    hdr['NAXIS2'] = pix_len
+    hdr['CTYPE1'] = 'RA---TAN'
+    hdr['CRVAL1'] = float(ra_ctr)
+    hdr['CRPIX1'] = (pix_len / 2.) * 1.
+    hdr['CDELT1'] = -1.0 * pix_scale
+    hdr['CTYPE2'] = 'DEC--TAN'
+    hdr['CRVAL2'] = float(dec_ctr)
+    hdr['CRPIX2'] = (pix_len / 2.) * 1.
+    hdr['CDELT2'] = pix_scale
+    hdr['EQUINOX'] = 2000
+    return hdr
+
+
 def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, write_info=True, model_bg=False):
     """
     Create cutouts of a galaxy in a single GALEX band.
@@ -405,6 +403,12 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
         pix_len = size_deg / pix_scale
         target_hdr = create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale)
 
+
+        # MAKE EXTENDED HEADER
+        pix_len_ext = int(np.ceil(size_deg * 3 / pix_scale))
+        target_hdr_ext = create_hdr(ra_ctr, dec_ctr, pix_len_ext, pix_scale)
+
+
         # CALCULATE TILE OVERLAP
         tile_overlaps = calc_tile_overlap(ra_ctr, dec_ctr, pad=size_deg,
                                           min_ra=index['MIN_RA'],
@@ -430,7 +434,12 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
         outim = ri_targ * np.nan
         prihdu = astropy.io.fits.PrimaryHDU(data=outim, header=target_hdr)
         target_hdr = prihdu.header
-
+        
+        ri_targ_ext, di_targ_ext = make_axes(target_hdr_ext)
+        sz_out = ri_targ_ext.shape
+        outim = ri_targ_ext * np.nan
+        prihdu_ext = astropy.io.fits.PrimaryHDU(data=outim, header=target_hdr_ext)
+        target_hdr_ext = prihdu_ext.header
 
         try:
             # CREATE NEW TEMP DIRECTORY TO STORE TEMPORARY FILES
@@ -447,9 +456,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # APPEND UNIT INFORMATION TO THE NEW HEADER AND WRITE OUT HEADER FILE
-            target_hdr['BUNIT'] = 'MJY/SR'
-            hdr_file = os.path.join(gal_dir, name + '_template.hdr')
-            write_headerfile(hdr_file, target_hdr)
+            hdrs = [target_hdr, target_hdr_ext]
+            suff = ['_template.hdr','_template_ext.hdr']
+            basef = [name + hh for hh in suff]
+            hdr_files = [os.path.join(gal_dir, b) for b in  basef]
+            for i, tg in enumerate(hdrs):
+                tg['BUNIT'] = 'MJY/SR'
+                write_headerfile(hdr_files[i], tg)
 
 
             # MASK IMAGES
@@ -459,13 +472,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # REPROJECT IMAGES
             reprojected_dir = os.path.join(gal_dir, 'reprojected')
             os.makedirs(reprojected_dir)
-            im_dir = reproject_images(hdr_file, im_dir, reprojected_dir, 'int')
-            wt_dir = reproject_images(hdr_file, wt_dir, reprojected_dir,'rrhr')
+            im_dir = reproject_images(hdr_files[1], im_dir, reprojected_dir, 'int')
+            wt_dir = reproject_images(hdr_files[1], wt_dir, reprojected_dir,'rrhr')
 
 
             # MODEL THE BACKGROUND IN THE IMAGE FILES?
             if model_bg:
-                im_dir = bg_model(gal_dir, im_dir, hdr_file)
+                im_dir = bg_model(gal_dir, im_dir, hdr_files[1], level_only=True)
 
 
             # WEIGHT IMAGES
@@ -483,9 +496,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES
             final_dir = os.path.join(gal_dir, 'mosaic')
             os.makedirs(final_dir)
-            coadd(hdr_file, final_dir, wt_dir, output='weights')
-            coadd(hdr_file, final_dir, im_dir, output='int')
-            coadd(hdr_file, final_dir, im_dir, output='count',add_type='count')
+            coadd(hdr_files[0], final_dir, wt_dir, output='weights')
+            coadd(hdr_files[0], final_dir, im_dir, output='int')
+            coadd(hdr_files[0], final_dir, im_dir, output='count', add_type='count')
 
 
             # DIVIDE OUT THE WEIGHTS
@@ -493,8 +506,12 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # SUBTRACT OUT THE BACKGROUND
-            remove_background(final_dir, imagefile, bg_reg_file)
-
+            rm_overall_bg = False
+            if rm_overall_bg:
+                remove_background(final_dir, imagefile, bg_reg_file)
+            else:
+                outfile = os.path.join(final_dir, 'final_mosaic.fits')
+                shutil.copy(imagefile, outfile)
 
             # COPY MOSAIC FILES TO CUTOUTS DIRECTORY
             mosaic_file = os.path.join(final_dir, 'final_mosaic.fits')
@@ -534,7 +551,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             me = sys.exc_info()[0]
             with open(problem_file, 'a') as myfile:
                 myfile.write(name + ': ' + str(me) + ': '+str(inst)+'\n')
-            shutil.rmtree(gal_dir, ignore_errors=True)
+            #shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
 
@@ -633,7 +650,7 @@ def convert_files(gal_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_as):
             if band.lower() == 'nuv':
                 im = counts2jy_galex(im, nuv_toab, pix_as)
             if not os.path.exists(int_outfiles[i]):
-                im -= np.mean(im)  # subtract out the mean of each image
+                #im -= np.mean(im)  # subtract out the mean of each image
                 astropy.io.fits.writeto(int_outfiles[i], im, hdr)
             if not os.path.exists(wt_outfiles[i]):
                 astropy.io.fits.writeto(wt_outfiles[i], wt, whdr)
@@ -796,7 +813,7 @@ def bg_model(gal_dir, reprojected_dir, template_header, level_only=False):
     template_header : ascii file
         Path to file containing the WCS to which we want to reproject our images
     level_only : bool, optional
-        Montage argument (Default: False)
+        Montage argument: Adjust background levels only, don't try to fit the slope (Default: False)
 
     Returns
     -------
