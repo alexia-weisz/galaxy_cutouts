@@ -757,7 +757,7 @@ def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_i
         astropy.io.fits.writeto(out_wtfile, wt, whdr)
 
 
-def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=True, exact=True, img_list=None):
+def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=True, exact=True, corners=True, img_list=None):
     """
     Reproject input images to a new WCS as given by a template header
 
@@ -772,11 +772,17 @@ def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=
     imtype : str
         The type of image you are reprojecting; one of [int, rrhr]
     whole : bool, optional
-        Montage argument (Default: True)
+        Montage argument: Force reprojection of whole images, even if they exceed the area of the FITS 
+        header template (Default: True)
     exact : bool, optional
-        Montage argument (Default: True)
+        Montage argument: Flag indicating output image should exactly match the FITS header template, 
+        and not crop off blank pixels (Default: True)
+    corners : bool, optional
+        Montage argument: Adds 8 columns for the RA and Dec of the image corners to the output metadata table 
+        (Default: True)
     img_list : list of strs, optional 
-        Montage argument (Default: None)
+        Montage argument: only process files with names specified in table img_list, ignoring any other files
+        in the directory. (Default: None)
 
     Returns
     -------
@@ -789,18 +795,18 @@ def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=
 
     # get image metadata from input images
     input_table = os.path.join(input_dir, imtype + '_input.tbl')
-    montage.mImgtbl(input_dir, input_table, corners=True, img_list=img_list)
+    montage.mImgtbl(input_dir, input_table, corners=corners, img_list=img_list)
 
     # Create reprojection directory, reproject, and get image metadata
     stats_table = os.path.join(reproj_imtype_dir, imtype+'_mProjExec_stats.log')
     montage.mProjExec(input_table, template_header, reproj_imtype_dir, stats_table, raw_dir=input_dir, whole=whole, exact=exact)
     reprojected_table = os.path.join(reproj_imtype_dir, imtype + '_reprojected.tbl')
-    montage.mImgtbl(reproj_imtype_dir, reprojected_table, corners=True)
+    montage.mImgtbl(reproj_imtype_dir, reprojected_table, corners=corners)
 
     return reproj_imtype_dir
 
 
-def bg_model(gal_dir, reprojected_dir, template_header, level_only=False):
+def bg_model(gal_dir, reprojected_dir, template_header, level_only=True):
     """
     Model the background for the mosaiced image
 
@@ -813,7 +819,7 @@ def bg_model(gal_dir, reprojected_dir, template_header, level_only=False):
     template_header : ascii file
         Path to file containing the WCS to which we want to reproject our images
     level_only : bool, optional
-        Montage argument: Adjust background levels only, don't try to fit the slope (Default: False)
+        Montage argument: Adjust background levels only, don't try to fit the slope (Default: True)
 
     Returns
     -------
