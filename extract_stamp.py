@@ -513,6 +513,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 outfile = os.path.join(final_dir, 'final_mosaic.fits')
                 shutil.copy(imagefile, outfile)
 
+
             # COPY MOSAIC FILES TO CUTOUTS DIRECTORY
             mosaic_file = os.path.join(final_dir, 'final_mosaic.fits')
             weight_file = os.path.join(final_dir, 'weights_mosaic.fits')
@@ -551,7 +552,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             me = sys.exc_info()[0]
             with open(problem_file, 'a') as myfile:
                 myfile.write(name + ': ' + str(me) + ': '+str(inst)+'\n')
-            #shutil.rmtree(gal_dir, ignore_errors=True)
+            shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
 
@@ -716,7 +717,7 @@ def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_i
     wtfile : str
         input weight file
     chip_rad : int
-        Radius of the GALEX chip (Default: 1400)
+        Radius of the GALEX chip to use. The actual radius of data is ~1500 pixels. There are known edge effects. (Default: 1400)
     chip_x0 : int
         Center of GALEX chip on the x-axis (Default: 1920)
     chip_y0 : int
@@ -745,19 +746,18 @@ def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_i
 
         # make pixel selections for masking
         i = (r > chip_rad)
-        j = (data == 0)
-        k = (wt == -1.1e30)
+        j = (wt == -1.1e30)
 
-        # mask pixels to 0 in the data, and to some very small number in the weight
-        data = np.where(i | k, 0, data)  #0
-        wt = np.where(i | k, 1e-20, wt) #1e-20
+        # mask pixels that meet eithr of the above criterion
+        data = np.where(i | j, np.nan, data)  #0
+        wt = np.where(i | j, np.nan, wt) #1e-20
 
         # write new data to file
         astropy.io.fits.writeto(out_intfile, data, hdr)
         astropy.io.fits.writeto(out_wtfile, wt, whdr)
 
 
-def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=False, exact=True, img_list=None):
+def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=True, exact=True, img_list=None):
     """
     Reproject input images to a new WCS as given by a template header
 
