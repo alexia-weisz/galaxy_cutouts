@@ -639,9 +639,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
-            for h in zip(hdrs, hdrfiles):
-                this_hdr, this_hdrfile = h[0], h[1]
-                append_to_hdr(this_hdr, this_hdrfile, keyword='BUNIT', value='MJY/SR')
+            gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SFR', ext=False)
+            #for h in zip(hdrs, hdrfiles):
+            #    this_hdr, this_hdrfile = h[0], h[1]
+            #    append_to_hdr(this_hdr, this_hdrfile, keyword='BUNIT', value='MJY/SR')
 
 
             # MASK IMAGES
