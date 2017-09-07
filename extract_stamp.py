@@ -436,9 +436,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
         target_hdr = prihdu.header
         
         ri_targ_ext, di_targ_ext = make_axes(target_hdr_ext)
-        sz_out = ri_targ_ext.shape
-        outim = ri_targ_ext * np.nan
-        prihdu_ext = astropy.io.fits.PrimaryHDU(data=outim, header=target_hdr_ext)
+        sz_out_ext = ri_targ_ext.shape
+        outim_ext = ri_targ_ext * np.nan
+        prihdu_ext = astropy.io.fits.PrimaryHDU(data=outim_ext, header=target_hdr_ext)
         target_hdr_ext = prihdu_ext.header
 
         try:
