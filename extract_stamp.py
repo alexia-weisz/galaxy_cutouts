@@ -617,7 +617,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
             #target_hdr, thfile = create_output_header(name, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
-            gal_hdr = myHeader(ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
+            gal_hdr = myHeader(name, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
             target_hdr = gal_hdr.hdr
             thfile = gal_hdr.hdrfile
             target_hdr_ext, thefile = create_output_header(name, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
