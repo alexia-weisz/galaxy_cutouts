@@ -622,7 +622,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
             gal_hdr = GalaxyHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
-            #target_hdr, thfile = gal_hdr.hdr, gal_hdr.hdrfile
 
 
             # GATHER THE INPUT FILES
@@ -668,8 +667,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
             final_dir = os.path.join(gal_dir, 'mosaic')
             os.makedirs(final_dir)
-            coadd(gal_hdr.hdrfile, final_dir, wt_dir, output='weights')
-            coadd(gal_hdr.hdrfile, final_dir, im_dir, output='int')
+            coadd(gal_hdr.hdrfile, final_dir, wt_dir, output='weights', add_type='mean')
+            coadd(gal_hdr.hdrfile, final_dir, im_dir, output='int', add_type='mean')
             coadd(gal_hdr.hdrfile, final_dir, im_dir, output='count', add_type='count')
 
 
@@ -690,23 +689,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             mosaic_file = os.path.join(final_dir, 'final_mosaic.fits')
             weight_file = os.path.join(final_dir, 'weights_mosaic.fits')
             count_file = os.path.join(final_dir, 'count_mosaic.fits')
-            #newfile = '_'.join([name, band]).upper() + '.FITS'
-            #wt_file = '_'.join([name, band]).upper() + '_weight.FITS'
-            #ct_file = '_'.join([name, band]).upper() + '_count.FITS'
 
             newsuffs = ['.FITS', '_weight.FITS', '_count.FITS']
             oldfiles = [mosaic_file, weight_file, count_file]
-            #newfiles = [newfile, wt_file, ct_file]
             newfiles = ['_'.join([name, band]).upper() + s for s in newsuffs]
 
             for files in zip(oldfiles, newfiles):
                 shutil.copy(files[0], os.path.join(_MOSAIC_DIR, files[1]))
-            #new_mosaic_file = os.path.join(_MOSAIC_DIR, newfile)
-            #new_weight_file = os.path.join(_MOSAIC_DIR, wt_file)
-            #new_count_file = os.path.join(_MOSAIC_DIR, ct_file)
-            #shutil.copy(mosaic_file, new_mosaic_file)
-            #shutil.copy(weight_file, new_weight_file)
-            #shutil.copy(count_file, new_count_file)
 
 
             # REMOVE TEMP GALAXY DIRECTORY AND EXTRA FILES
@@ -735,122 +724,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
-
-
-# def create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale):
-#     """
-#     Create a FITS header
-
-#     Parameters
-#     ----------
-#     ra_ctr : float
-#         RA of center of galaxy
-#     dec_ctr : float
-#         Dec of center of galaxy
-#     pix_len : float
-#         Length of each axis (square, so the same for x and y)
-#     pix_scale : float
-#         Pixel scale in degrees
-
-#     Returns
-#     -------
-#     hdr : astropy Header() object
-#         Newly created header object
-#     """
-#     hdr = astropy.io.fits.Header()
-#     hdr['NAXIS'] = 2
-#     hdr['NAXIS1'] = pix_len
-#     hdr['NAXIS2'] = pix_len
-#     hdr['CTYPE1'] = 'RA---TAN'
-#     hdr['CRVAL1'] = float(ra_ctr)
-#     hdr['CRPIX1'] = (pix_len / 2.) * 1.
-#     hdr['CDELT1'] = -1.0 * pix_scale
-#     hdr['CTYPE2'] = 'DEC--TAN'
-#     hdr['CRVAL2'] = float(dec_ctr)
-#     hdr['CRPIX2'] = (pix_len / 2.) * 1.
-#     hdr['CDELT2'] = pix_scale
-#     hdr['EQUINOX'] = 2000
-#     return hdr
-
-
-# def write_headerfile(header_file, header):
-#     """
-#     Write out the header for the output mosaiced image
-
-#     Parameters
-#     ----------
-#     header_file : str
-#         Path to file to which to write header
-#     header : array
-#         The header to which to write to ASCII file
-#     """
-#     f = open(header_file, 'w')
-#     for iii in range(len(header)):
-#         outline = str(header[iii:iii+1]).strip().rstrip('END').strip()+'\n'
-#         f.write(outline)
-#     f.close()
-
-
-# def create_output_header(galname, gal_dir, ra_ctr, dec_ctr, size_degrees, pixel_scale, factor=1):
-#     """
-#     Create a header and write it to an ascii file for use in Montage
-
-#     Parameters
-#     ----------
-#     galname : str
-#         Name of the galaxy
-#     ra_ctr : float
-#         Central RA of galaxy
-#     dec_ctr : float
-#         Central Dec of galaxy
-#     size_degrees : float
-#         size of cutout, in degrees
-#     pixel_scale : float
-#         pixel scale of output in arcseconds per pixel
-#     factor : int, optional
-#         Number by which to multiply size_degrees to extend the size of the cutout for bg modeling. (Default: 1)
-
-#     Returns
-#     -------
-#     target_hdr : astropy.header object
-#         The output header object
-#     header_file : str
-#         Path to the ascii file containing the header information
-#     """
-#     pix_len = int(np.ceil(size_degrees * factor / pixel_scale))
-#     hdr = create_hdr(ra_ctr, dec_ctr, pix_len, pixel_scale)
-#     ri_targ, di_targ = make_axes(hdr)
-#     sz_out = ri_targ.shape
-#     outim = ri_targ * np.nan
-
-#     prihdu = astropy.io.fits.PrimaryHDU(data=outim, header=hdr)
-#     target_hdr = prihdu.header
-
-#     suff = '_template.hdr'
-#     if factor != 1:
-#         suff = suff.replace('.hdr', '_ext.hdr')
-#     header_file = os.path.join(gal_dir, galname + suff)
-#     write_headerfile(header_file, target_hdr)
-
-#     return target_hdr, header_file
-
-
-# def append_to_hdr(header, headerfile, keyword=None, value=None):
-#     """
-#     Append information to the header and write to ASCII file
-
-#     Parameters
-#     ----------
-#     headerfile : str
-#         The path to the ascii file containing the header information
-#     keyword : str, optional
-#         The keyword in the header that you want to create (Default: None)
-#     value : multiple, optional
-#         The value to apply to the keyword (Default: None)
-#     """
-#     if keyword is not None:
-#         header[keyword] = value
-#         write_headerfile(headerfile, header)
 
 
 def get_input(index, ind, data_dir, gal_dir):
@@ -955,6 +828,46 @@ def convert_files(gal_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_as):
             continue
 
     return converted_dir, converted_dir
+
+
+def counts2jy_galex(counts, cal, pix_as):
+    """
+    Convert GALEX counts/s to MJy/sr
+
+    Parameters
+    ----------
+    counts : float
+        Array containing counts data to be converted
+    cal : float
+        Calibration value from counts to AB mag for desired band (FUV or NUV)
+    pix_as : float
+        Pixel scale in arcseconds
+
+    Returns
+    -------
+    val : float
+        Converted count rate data
+    """
+    # first convert to abmag
+    abmag = -2.5 * np.log10(counts) + cal
+
+    # then convert to Jy
+    f_nu = 10**(abmag/-2.5) * 3631.
+
+    # then to MJy
+    f_nu *= 1e-6
+
+    # then to MJy/sr
+    val = f_nu / (np.radians(pix_as/3600.))**2
+    return val
+    #val = flux / MJYSR2JYARCSEC / pixel_area / 1e-23 / C * FUV_LAMBDA**2
+
+
+def wtpersr(wt, pix_as):
+    """
+    Convert weights data to per steradian. NOT USED
+    """
+    return wt / (np.radians(pix_as/3600.))**2
 
 
 def mask_images(im_dir, wt_dir, gal_dir):
@@ -1247,46 +1160,6 @@ def create_table(in_dir, dir_type=None):
     return reprojected_table
 
 
-def counts2jy_galex(counts, cal, pix_as):
-    """
-    Convert GALEX counts/s to MJy/sr
-
-    Parameters
-    ----------
-    counts : float
-        Array containing counts data to be converted
-    cal : float
-        Calibration value from counts to AB mag for desired band (FUV or NUV)
-    pix_as : float
-        Pixel scale in arcseconds
-
-    Returns
-    -------
-    val : float
-        Converted count rate data
-    """
-    # first convert to abmag
-    abmag = -2.5 * np.log10(counts) + cal
-
-    # then convert to Jy
-    f_nu = 10**(abmag/-2.5) * 3631.
-
-    # then to MJy
-    f_nu *= 1e-6
-
-    # then to MJy/sr
-    val = f_nu / (np.radians(pix_as/3600.))**2
-    return val
-    #val = flux / MJYSR2JYARCSEC / pixel_area / 1e-23 / C * FUV_LAMBDA**2
-
-
-def wtpersr(wt, pix_as):
-    """
-    Convert weights data to per steradian. NOT USED
-    """
-    return wt / (np.radians(pix_as/3600.))**2
-
-
 def coadd(template_header, output_dir, input_dir, output=None, add_type=None):
     """
     Coadd input images to create mosaic.
@@ -1331,10 +1204,10 @@ def finish_weight(output_dir):
     """
     image_file = os.path.join(output_dir, 'int_mosaic.fits')
     wt_file = os.path.join(output_dir, 'weights_mosaic.fits')
-    count_file = os.path.join(output_dir, 'count_mosaic.fits')
+    #count_file = os.path.join(output_dir, 'count_mosaic.fits')
     im, hdr = astropy.io.fits.getdata(image_file, header=True)
     wt = astropy.io.fits.getdata(wt_file)
-    ct = astropy.io.fits.getdata(count_file)
+    #ct = astropy.io.fits.getdata(count_file)
 
     newim = im / wt
 
