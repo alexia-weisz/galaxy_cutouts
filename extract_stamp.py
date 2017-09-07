@@ -737,120 +737,120 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
     return
 
 
-def create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale):
-    """
-    Create a FITS header
+# def create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale):
+#     """
+#     Create a FITS header
 
-    Parameters
-    ----------
-    ra_ctr : float
-        RA of center of galaxy
-    dec_ctr : float
-        Dec of center of galaxy
-    pix_len : float
-        Length of each axis (square, so the same for x and y)
-    pix_scale : float
-        Pixel scale in degrees
+#     Parameters
+#     ----------
+#     ra_ctr : float
+#         RA of center of galaxy
+#     dec_ctr : float
+#         Dec of center of galaxy
+#     pix_len : float
+#         Length of each axis (square, so the same for x and y)
+#     pix_scale : float
+#         Pixel scale in degrees
 
-    Returns
-    -------
-    hdr : astropy Header() object
-        Newly created header object
-    """
-    hdr = astropy.io.fits.Header()
-    hdr['NAXIS'] = 2
-    hdr['NAXIS1'] = pix_len
-    hdr['NAXIS2'] = pix_len
-    hdr['CTYPE1'] = 'RA---TAN'
-    hdr['CRVAL1'] = float(ra_ctr)
-    hdr['CRPIX1'] = (pix_len / 2.) * 1.
-    hdr['CDELT1'] = -1.0 * pix_scale
-    hdr['CTYPE2'] = 'DEC--TAN'
-    hdr['CRVAL2'] = float(dec_ctr)
-    hdr['CRPIX2'] = (pix_len / 2.) * 1.
-    hdr['CDELT2'] = pix_scale
-    hdr['EQUINOX'] = 2000
-    return hdr
-
-
-def write_headerfile(header_file, header):
-    """
-    Write out the header for the output mosaiced image
-
-    Parameters
-    ----------
-    header_file : str
-        Path to file to which to write header
-    header : array
-        The header to which to write to ASCII file
-    """
-    f = open(header_file, 'w')
-    for iii in range(len(header)):
-        outline = str(header[iii:iii+1]).strip().rstrip('END').strip()+'\n'
-        f.write(outline)
-    f.close()
+#     Returns
+#     -------
+#     hdr : astropy Header() object
+#         Newly created header object
+#     """
+#     hdr = astropy.io.fits.Header()
+#     hdr['NAXIS'] = 2
+#     hdr['NAXIS1'] = pix_len
+#     hdr['NAXIS2'] = pix_len
+#     hdr['CTYPE1'] = 'RA---TAN'
+#     hdr['CRVAL1'] = float(ra_ctr)
+#     hdr['CRPIX1'] = (pix_len / 2.) * 1.
+#     hdr['CDELT1'] = -1.0 * pix_scale
+#     hdr['CTYPE2'] = 'DEC--TAN'
+#     hdr['CRVAL2'] = float(dec_ctr)
+#     hdr['CRPIX2'] = (pix_len / 2.) * 1.
+#     hdr['CDELT2'] = pix_scale
+#     hdr['EQUINOX'] = 2000
+#     return hdr
 
 
-def create_output_header(galname, gal_dir, ra_ctr, dec_ctr, size_degrees, pixel_scale, factor=1):
-    """
-    Create a header and write it to an ascii file for use in Montage
+# def write_headerfile(header_file, header):
+#     """
+#     Write out the header for the output mosaiced image
 
-    Parameters
-    ----------
-    galname : str
-        Name of the galaxy
-    ra_ctr : float
-        Central RA of galaxy
-    dec_ctr : float
-        Central Dec of galaxy
-    size_degrees : float
-        size of cutout, in degrees
-    pixel_scale : float
-        pixel scale of output in arcseconds per pixel
-    factor : int, optional
-        Number by which to multiply size_degrees to extend the size of the cutout for bg modeling. (Default: 1)
-
-    Returns
-    -------
-    target_hdr : astropy.header object
-        The output header object
-    header_file : str
-        Path to the ascii file containing the header information
-    """
-    pix_len = int(np.ceil(size_degrees * factor / pixel_scale))
-    hdr = create_hdr(ra_ctr, dec_ctr, pix_len, pixel_scale)
-    ri_targ, di_targ = make_axes(hdr)
-    sz_out = ri_targ.shape
-    outim = ri_targ * np.nan
-
-    prihdu = astropy.io.fits.PrimaryHDU(data=outim, header=hdr)
-    target_hdr = prihdu.header
-
-    suff = '_template.hdr'
-    if factor != 1:
-        suff = suff.replace('.hdr', '_ext.hdr')
-    header_file = os.path.join(gal_dir, galname + suff)
-    write_headerfile(header_file, target_hdr)
-
-    return target_hdr, header_file
+#     Parameters
+#     ----------
+#     header_file : str
+#         Path to file to which to write header
+#     header : array
+#         The header to which to write to ASCII file
+#     """
+#     f = open(header_file, 'w')
+#     for iii in range(len(header)):
+#         outline = str(header[iii:iii+1]).strip().rstrip('END').strip()+'\n'
+#         f.write(outline)
+#     f.close()
 
 
-def append_to_hdr(header, headerfile, keyword=None, value=None):
-    """
-    Append information to the header and write to ASCII file
+# def create_output_header(galname, gal_dir, ra_ctr, dec_ctr, size_degrees, pixel_scale, factor=1):
+#     """
+#     Create a header and write it to an ascii file for use in Montage
 
-    Parameters
-    ----------
-    headerfile : str
-        The path to the ascii file containing the header information
-    keyword : str, optional
-        The keyword in the header that you want to create (Default: None)
-    value : multiple, optional
-        The value to apply to the keyword (Default: None)
-    """
-    if keyword is not None:
-        header[keyword] = value
-        write_headerfile(headerfile, header)
+#     Parameters
+#     ----------
+#     galname : str
+#         Name of the galaxy
+#     ra_ctr : float
+#         Central RA of galaxy
+#     dec_ctr : float
+#         Central Dec of galaxy
+#     size_degrees : float
+#         size of cutout, in degrees
+#     pixel_scale : float
+#         pixel scale of output in arcseconds per pixel
+#     factor : int, optional
+#         Number by which to multiply size_degrees to extend the size of the cutout for bg modeling. (Default: 1)
+
+#     Returns
+#     -------
+#     target_hdr : astropy.header object
+#         The output header object
+#     header_file : str
+#         Path to the ascii file containing the header information
+#     """
+#     pix_len = int(np.ceil(size_degrees * factor / pixel_scale))
+#     hdr = create_hdr(ra_ctr, dec_ctr, pix_len, pixel_scale)
+#     ri_targ, di_targ = make_axes(hdr)
+#     sz_out = ri_targ.shape
+#     outim = ri_targ * np.nan
+
+#     prihdu = astropy.io.fits.PrimaryHDU(data=outim, header=hdr)
+#     target_hdr = prihdu.header
+
+#     suff = '_template.hdr'
+#     if factor != 1:
+#         suff = suff.replace('.hdr', '_ext.hdr')
+#     header_file = os.path.join(gal_dir, galname + suff)
+#     write_headerfile(header_file, target_hdr)
+
+#     return target_hdr, header_file
+
+
+# def append_to_hdr(header, headerfile, keyword=None, value=None):
+#     """
+#     Append information to the header and write to ASCII file
+
+#     Parameters
+#     ----------
+#     headerfile : str
+#         The path to the ascii file containing the header information
+#     keyword : str, optional
+#         The keyword in the header that you want to create (Default: None)
+#     value : multiple, optional
+#         The value to apply to the keyword (Default: None)
+#     """
+#     if keyword is not None:
+#         header[keyword] = value
+#         write_headerfile(headerfile, header)
 
 
 def get_input(index, ind, data_dir, gal_dir):
