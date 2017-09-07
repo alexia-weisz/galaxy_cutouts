@@ -690,12 +690,14 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             mosaic_file = os.path.join(final_dir, 'final_mosaic.fits')
             weight_file = os.path.join(final_dir, 'weights_mosaic.fits')
             count_file = os.path.join(final_dir, 'count_mosaic.fits')
-            newfile = '_'.join([name, band]).upper() + '.FITS'
-            wt_file = '_'.join([name, band]).upper() + '_weight.FITS'
-            ct_file = '_'.join([name, band]).upper() + '_count.FITS'
+            #newfile = '_'.join([name, band]).upper() + '.FITS'
+            #wt_file = '_'.join([name, band]).upper() + '_weight.FITS'
+            #ct_file = '_'.join([name, band]).upper() + '_count.FITS'
 
+            newsuffs = ['.FITS', '_weight.FITS', '_count.FITS']
             oldfiles = [mosaic_file, weight_file, count_file]
-            newfiles = [newfile, wt_file, ct_file]
+            #newfiles = [newfile, wt_file, ct_file]
+            newfiles = ['_'.join([name, band]).upper() + s for s in newsuffs]
 
             for files in zip(oldfiles, newfiles):
                 shutil.copy(files[0], os.path.join(_MOSAIC_DIR, files[1]))
