@@ -24,13 +24,14 @@ NUV2AB = 20.08
 GALEX_PIX_AS = 1.5 ## galex pixel scale in arcseconds -- from documentation
 
 
-class myHeader(object):
+class GalaxyHeader(object):
     def __init__(self, name, gal_dir, ra_ctr, dec_ctr, pix_len, pix_scale, factor=1):
         self.name = name
         self.gal_dir = gal_dir
         self.ra_ctr = ra_ctr
         self.dec_ctr = dec_ctr
-        self.hdr, self.hdrfile = self._create_hdr_output(pix_len, pix_scale, factor)
+        self.hdr, self.hdrfile = self._create_hdr_output(pix_len, pix_scale, factor=1)
+        self.hdr_ext, self.hdrfile_ext = self._create_hdr_output(pix_len, pix_scale, factor=factor)
 
     def _create_hdr_obj(self, pix_len, pix_scale):
         """
@@ -250,7 +251,7 @@ class myHeader(object):
         f.close()
 
 
-    def append2hdr(self, keyword=None, value=None):
+    def append2hdr(self, keyword=None, value=None, ext=False):
         """
         Append information to the header and write to ASCII file
 
@@ -264,8 +265,12 @@ class myHeader(object):
             The value to apply to the keyword (Default: None)
         """
         if keyword is not None:
-            self.hdr[keyword] = value
-            write_headerfile(self.hdrfile, self.hdr)
+            if ext:
+                self.hdr_ext[keyword] = value
+                write_headerfile(self.hdrfile_ext, self.hdr_ext)
+            else:
+                self.hdr[keyword] = value
+                write_headerfile(self.hdrfile, self.hdr)
 
 
 def calc_tile_overlap(ra_ctr, dec_ctr, pad=0.0, min_ra=0., max_ra=180., min_dec=-90., max_dec=90.):
@@ -616,13 +621,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             os.makedirs(gal_dir)
 
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
-            gal_hdr = myHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
+            gal_hdr = GalaxyHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
             target_hdr, thfile = gal_hdr.hdr, gal_hdr.hdrfile
             
-            gal_hdr_ext = myHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
-            target_hdr_ext, thefile = gal_hdr_ext.hdr, gal_hdr_ext.hdrfile
-            hdrs = [target_hdr, target_hdr_ext]
-            hdrfiles = [thfile, thefile]
+            #gal_hdr_ext = myHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
+            #target_hdr_ext, thefile = gal_hdr_ext.hdr, gal_hdr_ext.hdrfile
+            hdrs = [gal_hdr.hdr, gal_hdr.hdr_ext]
+            hdrfiles = [gal_hdr.hdrfile, gal_hdr.hdrfile_ext]
 
 
             # GATHER THE INPUT FILES
