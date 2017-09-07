@@ -23,6 +23,251 @@ NUV2AB = 20.08
 
 GALEX_PIX_AS = 1.5 ## galex pixel scale in arcseconds -- from documentation
 
+
+class myHeader(object):
+    def __init__(self, name, ra_ctr, dec_ctr, pix_len, pix_scale, factor=1):
+        self.name = name
+        self.ra_ctr = ra_ctr
+        self.dec_ctr = dec_ctr
+        self.hdr, self.hdrfile = _create_hdr_output(self, pix_len, pix_scale, factor=factor)
+
+
+    def _create_hdr_obj(self, pix_len, pix_scale):
+        """
+        Create a FITS header
+
+        Parameters
+        ----------
+        ra_ctr : float
+            RA of center of galaxy
+        dec_ctr : float
+            Dec of center of galaxy
+        pix_len : float
+            Length of each axis (square, so the same for x and y)
+        pix_scale : float
+            Pixel scale in degrees
+
+        Returns
+        -------
+        hdr : astropy Header() object
+            Newly created header object
+        """
+        hdr = astropy.io.fits.Header()
+        hdr['NAXIS'] = 2
+        hdr['NAXIS1'] = pix_len
+        hdr['NAXIS2'] = pix_len
+        hdr['CTYPE1'] = 'RA---TAN'
+        hdr['CRVAL1'] = float(self.ra_ctr)
+        hdr['CRPIX1'] = (pix_len / 2.) * 1.
+        hdr['CDELT1'] = -1.0 * pix_scale
+        hdr['CTYPE2'] = 'DEC--TAN'
+        hdr['CRVAL2'] = float(self.dec_ctr)
+        hdr['CRPIX2'] = (pix_len / 2.) * 1.
+        hdr['CDELT2'] = pix_scale
+        hdr['EQUINOX'] = 2000
+        return hdr
+
+
+    def _create_hdr_output(self, size_degrees, pixel_scale, factor=1):
+        """
+        Create a header and write it to an ascii file for use in Montage
+
+        Parameters
+        ----------
+        galname : str
+            Name of the galaxy
+        ra_ctr : float
+            Central RA of galaxy
+        dec_ctr : float
+            Central Dec of galaxy
+        size_degrees : float
+            size of cutout, in degrees
+        pixel_scale : float
+            pixel scale of output in arcseconds per pixel
+        factor : int, optional
+            Number by which to multiply size_degrees to extend the size of the cutout for bg modeling. (Default: 1)
+
+        Returns
+        -------
+        target_hdr : astropy.header object
+            The output header object
+        header_file : str
+            Path to the ascii file containing the header information
+        """
+        pix_len = int(np.ceil(size_degrees * factor / pixel_scale))
+        hdr = self._create_hdr_obj(self.ra_ctr, self.dec_ctr, pix_len, pixel_scale)
+        ri_targ, di_targ = self._make_axes(hdr)
+        sz_out = ri_targ.shape
+        outim = ri_targ * np.nan
+
+        prihdu = astropy.io.fits.PrimaryHDU(data=outim, header=hdr)
+        target_hdr = prihdu.header
+
+        suff = '_template.hdr'
+        if factor != 1:
+            suff = suff.replace('.hdr', '_ext.hdr')
+        header_file = os.path.join(gal_dir, galname + suff)
+        self.write_headerfile(self, header_file, target_hdr)
+
+        return target_hdr, header_file
+
+
+    def _make_axes(hdr, quiet=False, novec=False, vonly=False, simple=False):
+        """
+        Create axes arrays for the new mosaiced image. This is a simple translation to Python of Adam's
+        IDL routine of the same name.
+
+        Parameters
+        ----------
+        hdr : FITS header object
+            FITS header to hold astrometry of desired output image
+        quiet : bool, optional
+            NOT USED
+        novec : bool
+            Find RA and Dec for every point (Default: False)
+        vonly : bool
+            Return only velocity data (Default: False)
+        simple : bool
+            Do the simplest thing (Default: False)
+
+        Returns
+        -------
+        rimg : array
+            array for ouptut RA
+        dimg : array
+            array for output Dec
+        """
+
+        # PULL THE IMAGE/CUBE SIZES FROM THE HEADER
+        naxis  = int(hdr['NAXIS'])
+        naxis1 = int(hdr['NAXIS1'])
+        naxis2 = int(hdr['NAXIS2'])
+        if naxis > 2:
+            naxis3 = hdr['NAXIS3']
+
+        ## EXTRACT FITS ASTROMETRY STRUCTURE
+        ww = astropy.wcs.WCS(hdr)
+
+        #IF DATASET IS A CUBE THEN WE MAKE THE THIRD AXIS IN THE SIMPLEST WAY POSSIBLE (NO COMPLICATED ASTROMETRY WORRIES FOR FREQUENCY INFORMATION)
+        if naxis > 3:
+            #GRAB THE RELEVANT INFORMATION FROM THE ASTROMETRY HEADER
+            cd = ww.wcs.cd
+            crpix = ww.wcs.crpix
+            cdelt = ww.wcs.crelt
+            crval = ww.wcs.crval
+
+        if naxis > 2:
+        # MAKE THE VELOCITY AXIS (WILL BE M/S)
+            v = np.arange(naxis3) * 1.0
+            vdif = v - (hdr['CRPIX3']-1)
+            vaxis = (vdif * hdr['CDELT3'] + hdr['CRVAL3'])
+
+        # CUT OUT HERE IF WE ONLY WANT VELOCITY INFO
+        if vonly:
+            return vaxis
+
+        #IF 'SIMPLE' IS CALLED THEN DO THE REALLY TRIVIAL THING:
+        if simple:
+            print('Using simple aproach to make axes.')
+            print('BE SURE THIS IS WHAT YOU WANT! It probably is not.')
+            raxis = np.arange(naxis1) * 1.0
+            rdif = raxis - (hdr['CRPIX1'] - 1)
+            raxis = (rdif * hdr['CDELT1'] + hdr['CRVAL1'])
+
+            daxis = np.arange(naxis2) * 1.0
+            ddif = daxis - (hdr['CRPIX1'] - 1)
+            daxis = (ddif * hdr['CDELT1'] + hdr['CRVAL1'])
+
+            rimg = raxis # (fltarr(naxis2) + 1.)
+            dimg = (np.asarray(naxis1) + 1.) # daxis
+            return rimg, dimg
+
+        # OBNOXIOUS SFL/GLS THING
+        glspos = ww.wcs.ctype[0].find('GLS')
+        if glspos != -1:
+            ctstr = ww.wcs.ctype[0]
+            newtype = 'SFL'
+            ctstr.replace('GLS', 'SFL')
+            ww.wcs.ctype[0] = ctstr
+            print('Replaced GLS with SFL; CTYPE1 now =' + ww.wcs.ctype[0])
+
+        glspos = ww.wcs.ctype[1].find('GLS')
+        if glspos != -1:
+            ctstr = ww.wcs.ctype[1]
+            newtype = 'SFL'
+            ctstr.replace('GLS', 'SFL')
+            ww.wcs.ctype[1] = ctstr
+            print('Replaced GLS with SFL; CTYPE2 now = ' + ww.wcs.ctype[1])
+
+        # CALL 'xy2ad' TO FIND THE RA AND DEC FOR EVERY POINT IN THE IMAGE
+        if novec:
+            rimg = np.zeros((naxis1, naxis2))
+            dimg = np.zeros((naxis1, naxis2))
+            for i in range(naxis1):
+                j = np.asarray([0 for i in xrange(naxis2)])
+
+                pixcrd = np.array([[zip(float(i), float(j))]], numpy.float_)
+                ra, dec = ww.all_pix2world(pixcrd, 1)
+
+                rimg[i, :] = ra
+                dimg[i, :] = dec
+        else:
+            ximg = np.arange(naxis1) * 1.0
+            yimg = np.arange(naxis1) * 1.0
+            X, Y = np.meshgrid(ximg, yimg, indexing='xy')
+            ss = X.shape
+            xx, yy = X.flatten(), Y.flatten()
+
+            pixcrd = np.array(zip(xx, yy), np.float_)
+            img_new = ww.all_pix2world(pixcrd, 0)
+            rimg_new, dimg_new = img_new[:,0], img_new[:,1]
+
+            rimg = rimg_new.reshape(ss)
+            dimg = dimg_new.reshape(ss)
+
+        # GET AXES FROM THE IMAGES. USE THE CENTRAL COLUMN AND CENTRAL ROW
+        raxis = np.squeeze(rimg[:, naxis2/2])
+        daxis = np.squeeze(dimg[naxis1/2, :])
+
+        return rimg, dimg
+
+
+    def write_headerfile(self, header_file, header):
+        """
+        Write out the header for the output mosaiced image
+
+        Parameters
+        ----------
+        header_file : str
+            Path to file to which to write header
+        header : array
+            The header to which to write to ASCII file
+        """
+        f = open(header_file, 'w')
+        for iii in range(len(header)):
+            outline = str(header[iii:iii+1]).strip().rstrip('END').strip()+'\n'
+            f.write(outline)
+        f.close()
+
+
+    def append2hdr(self, keyword=None, value=None):
+        """
+        Append information to the header and write to ASCII file
+
+        Parameters
+        ----------
+        headerfile : str
+            The path to the ascii file containing the header information
+        keyword : str, optional
+            The keyword in the header that you want to create (Default: None)
+        value : multiple, optional
+            The value to apply to the keyword (Default: None)
+        """
+        if keyword is not None:
+            self.hdr[keyword] = value
+            write_headerfile(self.hdrfile, self.hdr)
+
+
 def calc_tile_overlap(ra_ctr, dec_ctr, pad=0.0, min_ra=0., max_ra=180., min_dec=-90., max_dec=90.):
     """
     Find all tiles that fall within a given overlap (pad) of (ra_ctr, dec_ctr)
@@ -371,7 +616,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             os.makedirs(gal_dir)
 
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
-            target_hdr, thfile = create_output_header(name, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
+            #target_hdr, thfile = create_output_header(name, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
+            gal_hdr = myHeader(ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
+            target_hdr = gal_hdr.hdr
+            thfile = gal_hdr.hdrfile
             target_hdr_ext, thefile = create_output_header(name, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
             hdrs = [target_hdr, target_hdr_ext]
             hdrfiles = [thfile, thefile]
@@ -483,24 +731,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
     return
 
 
-def write_headerfile(header_file, header):
-    """
-    Write out the header for the output mosaiced image
-
-    Parameters
-    ----------
-    header_file : str
-        Path to file to which to write header
-    header : array
-        The header to which to write to ASCII file
-    """
-    f = open(header_file, 'w')
-    for iii in range(len(header)):
-        outline = str(header[iii:iii+1]).strip().rstrip('END').strip()+'\n'
-        f.write(outline)
-    f.close()
-
-
 def create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale):
     """
     Create a FITS header
@@ -535,6 +765,24 @@ def create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale):
     hdr['CDELT2'] = pix_scale
     hdr['EQUINOX'] = 2000
     return hdr
+
+
+def write_headerfile(header_file, header):
+    """
+    Write out the header for the output mosaiced image
+
+    Parameters
+    ----------
+    header_file : str
+        Path to file to which to write header
+    header : array
+        The header to which to write to ASCII file
+    """
+    f = open(header_file, 'w')
+    for iii in range(len(header)):
+        outline = str(header[iii:iii+1]).strip().rstrip('END').strip()+'\n'
+        f.write(outline)
+    f.close()
 
 
 def create_output_header(galname, ra_ctr, dec_ctr, size_degrees, pixel_scale, factor=1):
@@ -583,7 +831,7 @@ def create_output_header(galname, ra_ctr, dec_ctr, size_degrees, pixel_scale, fa
 
 def append_to_hdr(header, headerfile, keyword=None, value=None):
     """
-    Append information to the header and write to file
+    Append information to the header and write to ASCII file
 
     Parameters
     ----------
