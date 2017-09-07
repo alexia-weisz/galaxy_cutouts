@@ -626,8 +626,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             
             #gal_hdr_ext = myHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
             #target_hdr_ext, thefile = gal_hdr_ext.hdr, gal_hdr_ext.hdrfile
-            hdrs = [gal_hdr.hdr, gal_hdr.hdr_ext]
-            hdrfiles = [gal_hdr.hdrfile, gal_hdr.hdrfile_ext]
+            #hdrs = [gal_hdr.hdr, gal_hdr.hdr_ext]
+            #hdrfiles = [gal_hdr.hdrfile, gal_hdr.hdrfile_ext]
 
 
             # GATHER THE INPUT FILES
