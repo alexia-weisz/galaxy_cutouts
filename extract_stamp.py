@@ -25,12 +25,12 @@ GALEX_PIX_AS = 1.5 ## galex pixel scale in arcseconds -- from documentation
 
 
 class myHeader(object):
-    def __init__(self, name, ra_ctr, dec_ctr, pix_len, pix_scale, factor=1):
+    def __init__(self, name, gal_dir, ra_ctr, dec_ctr, pix_len, pix_scale, factor=1):
         self.name = name
+        self.gal_dir = gal_dir
         self.ra_ctr = ra_ctr
         self.dec_ctr = dec_ctr
-        self.hdr, self.hdrfile = self._create_hdr_output(self, pix_len, pix_scale, factor=factor)
-
+        self.hdr, self.hdrfile = self._create_hdr_output(pix_len, pix_scale, factor)
 
     def _create_hdr_obj(self, pix_len, pix_scale):
         """
@@ -68,7 +68,7 @@ class myHeader(object):
         return hdr
 
 
-    def _create_hdr_output(self, size_degrees, pixel_scale, factor=1):
+    def _create_hdr_output(self, size_degrees, pixel_scale, factor):
         """
         Create a header and write it to an ascii file for use in Montage
 
@@ -95,7 +95,7 @@ class myHeader(object):
             Path to the ascii file containing the header information
         """
         pix_len = int(np.ceil(size_degrees * factor / pixel_scale))
-        hdr = self._create_hdr_obj(self.ra_ctr, self.dec_ctr, pix_len, pixel_scale)
+        hdr = self._create_hdr_obj(pix_len, pixel_scale)
         ri_targ, di_targ = self._make_axes(hdr)
         sz_out = ri_targ.shape
         outim = ri_targ * np.nan
@@ -106,13 +106,13 @@ class myHeader(object):
         suff = '_template.hdr'
         if factor != 1:
             suff = suff.replace('.hdr', '_ext.hdr')
-        header_file = os.path.join(gal_dir, galname + suff)
-        self.write_headerfile(self, header_file, target_hdr)
+        header_file = os.path.join(self.gal_dir, self.name + suff)
+        self.write_headerfile(header_file, target_hdr)
 
         return target_hdr, header_file
 
 
-    def _make_axes(hdr, quiet=False, novec=False, vonly=False, simple=False):
+    def _make_axes(self, hdr, quiet=False, novec=False, vonly=False, simple=False):
         """
         Create axes arrays for the new mosaiced image. This is a simple translation to Python of Adam's
         IDL routine of the same name.
@@ -616,11 +616,11 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             os.makedirs(gal_dir)
 
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
-            #target_hdr, thfile = create_output_header(name, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
-            gal_hdr = myHeader(name, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
-            target_hdr = gal_hdr.hdr
-            thfile = gal_hdr.hdrfile
-            target_hdr_ext, thefile = create_output_header(name, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
+            gal_hdr = myHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
+            target_hdr, thfile = gal_hdr.hdr, gal_hdr.hdrfile
+            
+            gal_hdr_ext = myHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
+            target_hdr_ext, thefile = gal_hdr_ext.hdr, gal_hdr_ext.hdrfile
             hdrs = [target_hdr, target_hdr_ext]
             hdrfiles = [thfile, thefile]
 
@@ -785,7 +785,7 @@ def write_headerfile(header_file, header):
     f.close()
 
 
-def create_output_header(galname, ra_ctr, dec_ctr, size_degrees, pixel_scale, factor=1):
+def create_output_header(galname, gal_dir, ra_ctr, dec_ctr, size_degrees, pixel_scale, factor=1):
     """
     Create a header and write it to an ascii file for use in Montage
 
