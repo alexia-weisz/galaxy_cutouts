@@ -622,12 +622,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
             gal_hdr = GalaxyHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
-            target_hdr, thfile = gal_hdr.hdr, gal_hdr.hdrfile
-            
-            #gal_hdr_ext = myHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
-            #target_hdr_ext, thefile = gal_hdr_ext.hdr, gal_hdr_ext.hdrfile
-            #hdrs = [gal_hdr.hdr, gal_hdr.hdr_ext]
-            #hdrfiles = [gal_hdr.hdrfile, gal_hdr.hdrfile_ext]
+            #target_hdr, thfile = gal_hdr.hdr, gal_hdr.hdrfile
 
 
             # GATHER THE INPUT FILES
@@ -640,10 +635,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
             gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
-            #for h in zip(hdrs, hdrfiles):
-            #    this_hdr, this_hdrfile = h[0], h[1]
-            #    append_to_hdr(this_hdr, this_hdrfile, keyword='BUNIT', value='MJY/SR')
-
+            
 
             # MASK IMAGES
             im_dir, wt_dir = mask_images(im_dir, wt_dir, gal_dir)
@@ -701,12 +693,18 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             newfile = '_'.join([name, band]).upper() + '.FITS'
             wt_file = '_'.join([name, band]).upper() + '_weight.FITS'
             ct_file = '_'.join([name, band]).upper() + '_count.FITS'
-            new_mosaic_file = os.path.join(_MOSAIC_DIR, newfile)
-            new_weight_file = os.path.join(_MOSAIC_DIR, wt_file)
-            new_count_file = os.path.join(_MOSAIC_DIR, ct_file)
-            shutil.copy(mosaic_file, new_mosaic_file)
-            shutil.copy(weight_file, new_weight_file)
-            shutil.copy(count_file, new_count_file)
+
+            oldfiles = [mosaic_file, weight_file, count_file]
+            newfiles = [newfile, wt_file, ct_file]
+
+            for files in zip(oldfiles, newfiles):
+                shutil.copy(files[0], os.path.join(_MOSAIC_DIR, files[1]))
+            #new_mosaic_file = os.path.join(_MOSAIC_DIR, newfile)
+            #new_weight_file = os.path.join(_MOSAIC_DIR, wt_file)
+            #new_count_file = os.path.join(_MOSAIC_DIR, ct_file)
+            #shutil.copy(mosaic_file, new_mosaic_file)
+            #shutil.copy(weight_file, new_weight_file)
+            #shutil.copy(count_file, new_count_file)
 
 
             # REMOVE TEMP GALAXY DIRECTORY AND EXTRA FILES
