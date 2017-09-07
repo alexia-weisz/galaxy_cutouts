@@ -621,7 +621,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             os.makedirs(gal_dir)
 
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
-            gal_hdr = GalaxyHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=1)
+            gal_hdr = GalaxyHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
             target_hdr, thfile = gal_hdr.hdr, gal_hdr.hdrfile
             
             #gal_hdr_ext = myHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
@@ -639,7 +639,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
-            gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SFR', ext=False)
+            gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
             #for h in zip(hdrs, hdrfiles):
             #    this_hdr, this_hdrfile = h[0], h[1]
             #    append_to_hdr(this_hdr, this_hdrfile, keyword='BUNIT', value='MJY/SR')
@@ -652,13 +652,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # REPROJECT IMAGES WITH EXTENDED HEADER
             reprojected_dir = os.path.join(gal_dir, 'reprojected')
             os.makedirs(reprojected_dir)
-            im_dir = reproject_images(hdrfiles[1], im_dir, reprojected_dir, 'int')
-            wt_dir = reproject_images(hdrfiles[1], wt_dir, reprojected_dir,'rrhr')
+            im_dir = reproject_images(gal_hdr.hdrfile_ext, im_dir, reprojected_dir, 'int')
+            wt_dir = reproject_images(gal_hdr.hdrfile_ext, wt_dir, reprojected_dir,'rrhr')
 
 
             # MODEL THE BACKGROUND IN THE IMAGE FILES WITH THE EXTENDED HEADER
             if model_bg:
-                im_dir = bg_model(gal_dir, im_dir, hdrfiles[1])
+                im_dir = bg_model(gal_dir, im_dir, gal_hdr.hdrfile_ext)
 
 
             # WEIGHT IMAGES
@@ -676,9 +676,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
             final_dir = os.path.join(gal_dir, 'mosaic')
             os.makedirs(final_dir)
-            coadd(hdrfiles[0], final_dir, wt_dir, output='weights')
-            coadd(hdrfiles[0], final_dir, im_dir, output='int')
-            coadd(hdrfiles[0], final_dir, im_dir, output='count', add_type='count')
+            coadd(gal_hdr.hdrfile, final_dir, wt_dir, output='weights')
+            coadd(gal_hdr.hdrfile, final_dir, im_dir, output='int')
+            coadd(gal_hdr.hdrfile, final_dir, im_dir, output='count', add_type='count')
 
 
             # DIVIDE OUT THE WEIGHTS
