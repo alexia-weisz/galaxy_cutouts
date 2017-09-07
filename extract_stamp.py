@@ -29,7 +29,7 @@ class myHeader(object):
         self.name = name
         self.ra_ctr = ra_ctr
         self.dec_ctr = dec_ctr
-        self.hdr, self.hdrfile = _create_hdr_output(self, pix_len, pix_scale, factor=factor)
+        self.hdr, self.hdrfile = self._create_hdr_output(self, pix_len, pix_scale, factor=factor)
 
 
     def _create_hdr_obj(self, pix_len, pix_scale):
