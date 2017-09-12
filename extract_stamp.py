@@ -14,7 +14,7 @@ from pdb import set_trace
 
 _TOP_DIR = '/data/tycho/0/leroy.42/allsky/'
 _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
-_HOME_DIR = '/data/tycho/0/lewis.1590/atlas/'
+_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
 _MOSAIC_DIR = os.path.join(_HOME_DIR, 'cutouts')
 
 # CALIBRATION FROM GALEX COUNTS TO ABMAG
@@ -576,9 +576,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
     """
     ttype = 'galex'
     data_dir = os.path.join(_TOP_DIR, ttype, 'sorted_tiles')
-    problem_file = os.path.join(_HOME_DIR, 'problem_galaxies_' + band + '.txt')
-    bg_reg_file = os.path.join(_HOME_DIR, 'galex_reprojected_bg.reg')
-    numbers_file = os.path.join(_HOME_DIR, 'gal_reproj_info_' + band + '.dat')
+    problem_file = os.path.join(_WORK_DIR, 'problem_galaxies_{}.txt'.format(band))# 'problem_galaxies_' + band + '.txt')
+    bg_reg_file = os.path.join(_WORK_DIR, 'galex_reprojected_bg.reg')
+    numbers_file = os.path.join(_WORK_DIR, 'gal_reproj_info_{}.txt'.format(band))# 'gal_reproj_info_' + band + '.dat')
 
     galaxy_mosaic_file = os.path.join(_MOSAIC_DIR, '_'.join([name, band]).upper() + '.FITS')
 
@@ -593,7 +593,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             index, hdr = astropy.io.fits.getdata(indexfile, ext, header=True)
 
 
-         # CALCULATE TILE OVERLAP
+        # CALCULATE TILE OVERLAP
         tile_overlaps = calc_tile_overlap(ra_ctr, dec_ctr, pad=size_deg,
                                           min_ra=index['MIN_RA'],
                                           max_ra=index['MAX_RA'],
