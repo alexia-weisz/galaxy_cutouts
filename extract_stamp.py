@@ -267,10 +267,10 @@ class GalaxyHeader(object):
         if keyword is not None:
             if ext:
                 self.hdr_ext[keyword] = value
-                write_headerfile(self.hdrfile_ext, self.hdr_ext)
+                self.write_headerfile(self.hdrfile_ext, self.hdr_ext)
             else:
                 self.hdr[keyword] = value
-                write_headerfile(self.hdrfile, self.hdr)
+                self.write_headerfile(self.hdrfile, self.hdr)
 
 
 def calc_tile_overlap(ra_ctr, dec_ctr, pad=0.0, min_ra=0., max_ra=180., min_dec=-90., max_dec=90.):
