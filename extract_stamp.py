@@ -617,7 +617,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
         try:
             # CREATE NEW TEMP DIRECTORY TO STORE TEMPORARY FILES
-            gal_dir = os.path.join(_HOME_DIR, '_'.join([name, band]).upper())
+            gal_dir = os.path.join(_WORK_DIR, '_'.join([name, band]).upper())
             os.makedirs(gal_dir)
 
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
