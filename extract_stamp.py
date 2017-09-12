@@ -15,7 +15,7 @@ from pdb import set_trace
 _TOP_DIR = '/data/tycho/0/leroy.42/allsky/'
 _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
 _WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
-_MOSAIC_DIR = os.path.join(_HOME_DIR, 'cutouts')
+_MOSAIC_DIR = os.path.join(_WORK_DIR, 'cutouts')
 
 # CALIBRATION FROM GALEX COUNTS TO ABMAG
 FUV2AB = 18.82
