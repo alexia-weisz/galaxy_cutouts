@@ -595,7 +595,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
         # CALCULATE TILE OVERLAP
-        tile_overlaps = calc_tile_overlap(ra_ctr, dec_ctr, pad=size_deg*3,
+        tile_overlaps = calc_tile_overlap(ra_ctr, dec_ctr, pad=size_deg,
                                           min_ra=index['MIN_RA'],
                                           max_ra=index['MAX_RA'],
                                           min_dec=index['MIN_DEC'],
@@ -627,7 +627,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # GATHER THE INPUT FILES
             im_dir, wt_dir, nfiles = get_input(index, ind, data_dir, gal_dir)
-
+            set_trace()
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
             im_dir, wt_dir = convert_files(gal_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
@@ -758,10 +758,10 @@ def get_input(index, ind, data_dir, gal_dir):
     wtfiles = [os.path.join(data_dir, f) for f in wtfiles]
     flgfiles = [os.path.join(data_dir, f) for f in flgfiles]
 
-    for infile in infiles:
-        basename = os.path.basename(infile)
-        new_in_file = os.path.join(input_dir, basename)
-        os.symlink(infile, new_in_file)
+    #for infile in infiles:
+    #    basename = os.path.basename(infile)
+    #    new_in_file = os.path.join(input_dir, basename)
+    #    os.symlink(infile, new_in_file)
 
     for wtfile in wtfiles:
         basename = os.path.basename(wtfile)
