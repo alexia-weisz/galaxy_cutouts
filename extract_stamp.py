@@ -1,14 +1,15 @@
+import numpy as np
 import astropy.io.fits
 import astropy.wcs
+import montage_wrapper as montage
+from matplotlib.path import Path
+import sewpy
 import os
 import sys
-import numpy as np
-import montage_wrapper as montage
 import shutil
-import sys
 import glob
 import time
-from matplotlib.path import Path
+
 from pdb import set_trace
 
 
@@ -594,7 +595,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
         # CALCULATE TILE OVERLAP
-        tile_overlaps = calc_tile_overlap(ra_ctr, dec_ctr, pad=size_deg,
+        tile_overlaps = calc_tile_overlap(ra_ctr, dec_ctr, pad=size_deg*3,
                                           min_ra=index['MIN_RA'],
                                           max_ra=index['MAX_RA'],
                                           min_dec=index['MIN_DEC'],
