@@ -646,7 +646,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # MASK IMAGES
             masked_dir = os.path.join(gal_dir, 'masked')
             os.makedirs(masked_dir)
-            int_masked_dir = os.path.join(masked_dir, 'int')
+            im_masked_dir = os.path.join(masked_dir, 'int')
             wt_masked_dir = os.path.join(masked_dir, 'rrhr')
             os.makedirs(int_masked_dir)
             os.makedirs(wt_masked_dir)
@@ -881,7 +881,7 @@ def wtpersr(wt, pix_as):
     return wt / (np.radians(pix_as/3600.))**2
 
 
-def mask_images(im_dir, wt_dir, int_masked_dir, wt_masked_dir):
+def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir):
     """
     Mask pixels in the input images
 
@@ -909,7 +909,7 @@ def mask_images(im_dir, wt_dir, int_masked_dir, wt_masked_dir):
         image_infile = int_images[i]
         wt_infile = rrhr_images[i]
 
-        image_outfile = os.path.join(int_masked_dir, os.path.basename(image_infile))
+        image_outfile = os.path.join(im_masked_dir, os.path.basename(image_infile))
         wt_outfile = os.path.join(wt_masked_dir, os.path.basename(wt_infile))
 
         mask_galex(image_infile, wt_infile, out_intfile=image_outfile, out_wtfile=wt_outfile)
