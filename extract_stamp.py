@@ -975,7 +975,7 @@ def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_i
         astropy.io.fits.writeto(out_wtfile, wt, whdr)
 
 
-def reproject_images(template_header, input_dir, repro_imtype_dir, imtype, whole=True, exact=True, corners=True, img_list=None):
+def reproject_images(template_header, input_dir, reproj_imtype_dir, imtype, whole=True, exact=True, corners=True, img_list=None):
     """
     Reproject input images to a new WCS as given by a template header
 
