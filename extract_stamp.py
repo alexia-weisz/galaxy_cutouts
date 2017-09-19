@@ -707,10 +707,12 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
             final_dir = os.path.join(gal_dir, 'mosaic')
             os.makedirs(final_dir)
-            coadd(gal_hdr.hdrfile, final_dir, wt_dir, output='weights', add_type='mean')
-            coadd(gal_hdr.hdrfile, final_dir, im_dir, output='int', add_type='mean')
-            coadd(gal_hdr.hdrfile, final_dir, im_dir, output='count', add_type='count')
-
+            #coadd(gal_hdr.hdrfile, final_dir, wt_dir, output='weights', add_type='mean')
+            #coadd(gal_hdr.hdrfile, final_dir, im_dir, output='int', add_type='mean')
+            #coadd(gal_hdr.hdrfile, final_dir, im_dir, output='count', add_type='count')
+            coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
+            coadd(template_header, final_dir, im_dir, output='int', add_type='mean')
+            coadd(template_header, final_dir, im_dir, output='count', add_type='count')
 
             # DIVIDE OUT THE WEIGHTS
             imagefile = finish_weight(final_dir)
