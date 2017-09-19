@@ -628,7 +628,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # GATHER THE INPUT FILES
             input_dir = os.path.join(gal_dir, 'input')
             os.makedirs(input_dir)
-            nfiles = get_input(index, ind, data_dir)
+            nfiles = get_input(index, ind, data_dir, input_dir)
             im_dir, wt_dir = input_dir, input_dir
 
 
