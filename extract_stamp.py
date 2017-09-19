@@ -647,21 +647,26 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             masked_dir = os.path.join(gal_dir, 'masked')
             im_masked_dir = os.path.join(masked_dir, 'int')
             wt_masked_dir = os.path.join(masked_dir, 'rrhr')
-            os.makedirs(masked_dir)
-            os.makedirs(im_masked_dir)
-            os.makedirs(wt_masked_dir)
+            for dir in [masked_dir, im_masked_dir, wt_masked_dir]:
+                os.makedirs(dir)
 
             mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir)
             im_dir = im_masked_dir
             wt_dir = wt_masked_dir
-            set_trace()
+
 
             # REPROJECT IMAGES WITH EXTENDED HEADER
             reprojected_dir = os.path.join(gal_dir, 'reprojected')
-            os.makedirs(reprojected_dir)
-            im_dir = reproject_images(gal_hdr.hdrfile_ext, im_dir, reprojected_dir, 'int')
-            wt_dir = reproject_images(gal_hdr.hdrfile_ext, wt_dir, reprojected_dir,'rrhr')
+            reproj_im_dir = os.path.join(reprojected_dir, 'int')
+            reproj_wt_dir = os.path.join(reprojected_dir, 'rrhr')
+            for dir in [reprojected_dir, reproj_im_dir, reproj_wt_dir]:
+                os.makedirs(dir)
 
+            reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_im_dir, 'int')
+            reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, 'rrhr')
+            im_dir = reproj_im_dir
+            wt_dir = reproj_wt_dir
+            set_trace()
 
             # MODEL THE BACKGROUND IN THE IMAGE FILES WITH THE EXTENDED HEADER
             if model_bg:
@@ -970,7 +975,7 @@ def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_i
         astropy.io.fits.writeto(out_wtfile, wt, whdr)
 
 
-def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=True, exact=True, corners=True, img_list=None):
+def reproject_images(template_header, input_dir, repro_imtype_dir, imtype, whole=True, exact=True, corners=True, img_list=None):
     """
     Reproject input images to a new WCS as given by a template header
 
@@ -1002,9 +1007,6 @@ def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=
     reproj_imtype_dir : str
         Path to output directory containing the reprojected images
     """
-    # create directory for storing reprojected images
-    reproj_imtype_dir = os.path.join(reprojected_dir, imtype)
-    os.makedirs(reproj_imtype_dir)
 
     # get image metadata from input images
     input_table = os.path.join(input_dir, imtype + '_input.tbl')
@@ -1012,11 +1014,12 @@ def reproject_images(template_header, input_dir, reprojected_dir, imtype, whole=
 
     # Create reprojection directory, reproject, and get image metadata
     stats_table = os.path.join(reproj_imtype_dir, imtype+'_mProjExec_stats.log')
-    montage.mProjExec(input_table, template_header, reproj_imtype_dir, stats_table, raw_dir=input_dir, whole=whole, exact=exact)
+    montage.mProjExec(input_table, template_header, reproj_imtype_dir, stats_table, raw_dir=input_dir, 
+                      whole=whole, exact=exact)
     reprojected_table = os.path.join(reproj_imtype_dir, imtype + '_reprojected.tbl')
     montage.mImgtbl(reproj_imtype_dir, reprojected_table, corners=corners)
 
-    return reproj_imtype_dir
+    return
 
 
 def bg_model(gal_dir, reprojected_dir, template_header, level_only=True):
