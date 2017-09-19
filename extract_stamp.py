@@ -635,6 +635,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             input_table = os.path.join(im_dir, 'input.tbl')
             montage.mImgtbl(im_dir, input_table, corners=corners)
             template_header = os.path.join(_WORK_DIR, 'template.hdr')
+            set_trace()
             montage.mMakeHdr(input_table, template_header, north_aligned=False, 
                              system=None, equinox=None)
             set_trace()
