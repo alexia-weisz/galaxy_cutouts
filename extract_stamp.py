@@ -633,12 +633,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # MAKE EXTENDED HEADER FOR REPROJECTING USING MONTAGE COMMANDS
             input_table = os.path.join(im_dir, 'input.tbl')
-            montage.mImgtbl(im_dir, input_table, corners=corners)
+            montage.mImgtbl(im_dir, input_table, corners=True)
             template_header = os.path.join(_WORK_DIR, 'template.hdr')
-            set_trace()
-            montage.mMakeHdr(input_table, template_header, north_aligned=False, 
-                             system=None, equinox=None)
-            set_trace()
+            montage.mMakeHdr(input_table, template_header, north_aligned=False, system=None, equinox=None)
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
             converted_dir = os.path.join(gal_dir, 'converted')
@@ -670,8 +667,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             for outdir in [reprojected_dir, reproj_im_dir, reproj_wt_dir]:
                 os.makedirs(outdir)
 
-            reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_im_dir, 'int')
-            reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, 'rrhr')
+            #reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_im_dir, 'int')
+            #reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, 'rrhr')
+            reproject_images(template_header, im_dir, reproj_im_dir, 'int')
+            reproject_images(template_header, wt_dir, reproj_wt_dir, 'rrhr')
             im_dir = reproj_im_dir
             wt_dir = reproj_wt_dir
 
@@ -683,7 +682,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 corr_dir = os.path.join(bg_model_dir, 'corrected')
                 for outdir in [bg_model_dir, diff_dir, corr_dir]:
                     os.makedirs(outdir)
-                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, level_only=False)
+                #bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, level_only=False)
+                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, level_only=False)
                 im_dir = corr_dir
 
 
