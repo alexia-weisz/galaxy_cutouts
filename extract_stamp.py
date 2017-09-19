@@ -659,8 +659,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             reprojected_dir = os.path.join(gal_dir, 'reprojected')
             reproj_im_dir = os.path.join(reprojected_dir, 'int')
             reproj_wt_dir = os.path.join(reprojected_dir, 'rrhr')
-            for dir in [reprojected_dir, reproj_im_dir, reproj_wt_dir]:
-                os.makedirs(dir)
+            for outdir in [reprojected_dir, reproj_im_dir, reproj_wt_dir]:
+                os.makedirs(outdir)
 
             reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_im_dir, 'int')
             reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, 'rrhr')
@@ -670,13 +670,24 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # MODEL THE BACKGROUND IN THE IMAGE FILES WITH THE EXTENDED HEADER
             if model_bg:
-                im_dir = bg_model(gal_dir, im_dir, gal_hdr.hdrfile_ext)
+                bg_model_dir = os.path.join(gal_dir, 'background_model')
+                diff_dir = os.path.join(bg_model_dir, 'differences')
+                corr_dir = os.path.join(bg_model_dir, 'corrected')
+                for outdir in [bg_model_dir, diff_dir, corr_dir]:
+                    os.makedirs(outdir)
+                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, level_only=False)
+                im_dir = corr_dir
 
 
             # WEIGHT IMAGES
             weight_dir = os.path.join(gal_dir, 'weight')
-            os.makedirs(weight_dir)
-            im_dir, wt_dir = weight_images(im_dir, wt_dir, weight_dir)
+            im_weight_dir = os.path.join(weight_dir, 'int')
+            wt_weight_dir = os.path.join(weight_dir, 'rrhr')
+            for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
+                os.makedirs(outdir)
+            weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
+            im_dir = im_weight_dir
+            wt_dir = wt_weight_dir
 
 
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
@@ -764,8 +775,6 @@ def get_input(index, ind, data_dir, input_dir):
 
     Returns
     -------
-    input_dir : str
-        The path to the input files
     len(input_files) : int
         The number of files that will go into the mosaic.
     """
@@ -800,8 +809,8 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
 
     Parameters
     ----------
-    gal_dir : str
-        Path to temp directory in which mosaicing is being performed
+    converted_dir : str
+        Path to temp directory in which to store converted files
     im_dir : str
         Path to directory that holds the input images (-int files in GALEX)
     wt_dir : str
@@ -814,11 +823,6 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
         GALEX NUV conversion from counts to AB mag
     pix_as : float
         pixel scale in arcseconds
-
-    Returns
-    -------
-    converted_dir : str
-        Path to directory containing images converted to flux density
     """
     
     intfiles = sorted(glob.glob(os.path.join(im_dir, '*-int.fits')))
@@ -895,15 +899,10 @@ def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir):
         Path to directory containing the images
     wt_dir : str
         Path to directory containing the weights
-    gal_dir : str
-        Path to temp directory for this galaxy in which the mosaicing is being performed
-
-    Returns
-    -------
-    int_masked_dir : str
-        Path to directory containing the masked images
+    im_masked_dir : str
+        Path to temp directory for this galaxy in which to store masked image files
     wt_masked_dir : str
-        Path to directory containing the masked weight images
+        Path to temp directory for this galaxy in which to store masked weight files
     """
     int_suff, rrhr_suff = '*_mjysr.fits', '*-rrhr.fits'
     int_images = sorted(glob.glob(os.path.join(im_dir, int_suff)))
@@ -917,8 +916,6 @@ def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir):
         wt_outfile = os.path.join(wt_masked_dir, os.path.basename(wt_infile))
 
         mask_galex(image_infile, wt_infile, out_intfile=image_outfile, out_wtfile=wt_outfile)
-
-    return
 
 
 def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_intfile=None, out_wtfile=None):
@@ -983,7 +980,7 @@ def reproject_images(template_header, input_dir, reproj_imtype_dir, imtype, whol
         ASCII file containing the WCS to which you want to reproject. This is what Montage requires.
     input_dir : str
         Path to directory containing input data
-    reprojected_dir : 
+    reproj_imtype_dir : 
         Path to new directory for storing reprojected data
     imtype : str
         The type of image you are reprojecting; one of [int, rrhr]
@@ -999,11 +996,6 @@ def reproject_images(template_header, input_dir, reproj_imtype_dir, imtype, whol
     img_list : list of strs, optional 
         Montage argument: only process files with names specified in table img_list, ignoring any other files
         in the directory. (Default: None)
-
-    Returns
-    -------
-    reproj_imtype_dir : str
-        Path to output directory containing the reprojected images
     """
 
     # get image metadata from input images
@@ -1017,66 +1009,50 @@ def reproject_images(template_header, input_dir, reproj_imtype_dir, imtype, whol
     reprojected_table = os.path.join(reproj_imtype_dir, imtype + '_reprojected.tbl')
     montage.mImgtbl(reproj_imtype_dir, reprojected_table, corners=corners)
 
-    return
 
-
-def bg_model(gal_dir, reprojected_dir, template_header, level_only=True):
+def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header, level_only=True):
     """
     Model the background for the mosaiced image
 
     Parameters
     ----------
-    gal_dir : str
-        Path to temp directory containing all data for galaxy 
     reprojected_dir : str
-        Path to directory inside gal_dir containing the reprojected images
+        Path to temp directory containing reprojected images 
+    bg_model_dir : str
+        Path to directory inside gal_dir to hold the background modeling information
+    diff_dir : str
+        Path to directory inside bg_model_dir to hold the difference images
+    corr_dir : str
+        Path to directory inside bg_model_dir to hold the background corrected images
     template_header : ascii file
         Path to file containing the WCS to which we want to reproject our images
     level_only : bool, optional
         Montage argument: Adjust background levels only, don't try to fit the slope (Default: True)
-
-    Returns
-    -------
-    corr_dir : str
-        Path to directory containing the background-corrected images
     """
-    bg_model_dir = os.path.join(gal_dir, 'background_model')
-    os.makedirs(bg_model_dir)
-
     # FIND OVERLAPS
-    diff_dir = os.path.join(bg_model_dir, 'differences')
-    os.makedirs(diff_dir)
     reprojected_table = os.path.join(reprojected_dir,'int_reprojected.tbl')
     diffs_table = os.path.join(diff_dir, 'differences.tbl')
     montage.mOverlaps(reprojected_table, diffs_table)
-
 
     # CALCULATE DIFFERENCES BETWEEN OVERLAPPING IMAGES
     montage.mDiffExec(diffs_table, template_header, diff_dir,
                       proj_dir=reprojected_dir)
 
-
     # BEST-FIT PLANE COEFFICIENTS
     fits_table = os.path.join(diff_dir, 'fits.tbl')
     montage.mFitExec(diffs_table, fits_table, diff_dir)
 
-
     # CALCULATE CORRECTIONS
-    corr_dir = os.path.join(bg_model_dir, 'corrected')
-    os.makedirs(corr_dir)
     corrections_table = os.path.join(corr_dir, 'corrections.tbl')
     montage.mBgModel(reprojected_table, fits_table, corrections_table,
                      level_only=level_only)
-
 
     # APPLY CORRECTIONS
     montage.mBgExec(reprojected_table, corrections_table, corr_dir,
                     proj_dir=reprojected_dir)
 
-    return corr_dir
 
-
-def weight_images(im_dir, wt_dir, weight_dir):
+def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir):
     """
     Weight the input images by a set of weights images
 
@@ -1088,22 +1064,14 @@ def weight_images(im_dir, wt_dir, weight_dir):
         Path to directory containing the weights
     weight_dir : str
         Path to directory for the newly weighted images
-
-    Returns
-    -------
     im_weight_dir : str
         Path to subdirectory containing the weighted images
     wt_weight_dir : str
-        Path to subdirectory containgn the weights images (same as before, they haven't changed)
+        Path to subdirectory containgn the weights images (same as before, they haven't changed)    
     """
     im_suff, wt_suff = '*_mjysr.fits', '*-rrhr.fits'
     imfiles = sorted(glob.glob(os.path.join(im_dir, im_suff)))
-    wtfiles = sorted(glob.glob(os.path.join(wt_dir, wt_suff)))
-
-    # create the new output directories
-    im_weight_dir = os.path.join(weight_dir, 'int')
-    wt_weight_dir = os.path.join(weight_dir, 'rrhr')
-    [os.makedirs(out_dir) for out_dir in [im_weight_dir, wt_weight_dir]]
+    wtfiles = sorted(glob.glob(os.path.join(wt_dir, wt_suff)))    
 
     # weight each image
     for i in range(len(imfiles)):
@@ -1137,8 +1105,6 @@ def weight_images(im_dir, wt_dir, weight_dir):
         if os.path.exists(old_area_file):
             new_area_file = weightfile.replace('.fits', '_area.fits')
             shutil.copy(old_area_file, new_area_file)
-
-    return im_weight_dir, wt_weight_dir
 
 
 def create_table(in_dir, dir_type=None):
