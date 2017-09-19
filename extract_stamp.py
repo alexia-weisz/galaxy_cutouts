@@ -647,8 +647,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             masked_dir = os.path.join(gal_dir, 'masked')
             im_masked_dir = os.path.join(masked_dir, 'int')
             wt_masked_dir = os.path.join(masked_dir, 'rrhr')
-            for dir in [masked_dir, im_masked_dir, wt_masked_dir]:
-                os.makedirs(dir)
+            for outdir in [masked_dir, im_masked_dir, wt_masked_dir]:
+                os.makedirs(outdir)
 
             mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir)
             im_dir = im_masked_dir
@@ -666,7 +666,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, 'rrhr')
             im_dir = reproj_im_dir
             wt_dir = reproj_wt_dir
-            set_trace()
+
 
             # MODEL THE BACKGROUND IN THE IMAGE FILES WITH THE EXTENDED HEADER
             if model_bg:
@@ -776,10 +776,10 @@ def get_input(index, ind, data_dir, input_dir):
     wtfiles = [os.path.join(data_dir, f) for f in wtfiles]
     flgfiles = [os.path.join(data_dir, f) for f in flgfiles]
 
-    #for infile in infiles:
-    #    basename = os.path.basename(infile)
-    #    new_in_file = os.path.join(input_dir, basename)
-    #    os.symlink(infile, new_in_file)
+    for infile in infiles:
+        basename = os.path.basename(infile)
+        new_in_file = os.path.join(input_dir, basename)
+        os.symlink(infile, new_in_file)
 
     for wtfile in wtfiles:
         basename = os.path.basename(wtfile)
@@ -843,8 +843,6 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
                 astropy.io.fits.writeto(wt_outfiles[i], wt, whdr)
         else:
             continue
-
-    return
 
 
 def counts2jy_galex(counts, cal, pix_as):
@@ -1011,7 +1009,7 @@ def reproject_images(template_header, input_dir, reproj_imtype_dir, imtype, whol
     # get image metadata from input images
     input_table = os.path.join(input_dir, imtype + '_input.tbl')
     montage.mImgtbl(input_dir, input_table, corners=corners, img_list=img_list)
-    set_trace()
+
     # Create reprojection directory, reproject, and get image metadata
     stats_table = os.path.join(reproj_imtype_dir, imtype+'_mProjExec_stats.log')
     montage.mProjExec(input_table, template_header, reproj_imtype_dir, stats_table, raw_dir=input_dir, 
