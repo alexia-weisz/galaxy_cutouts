@@ -631,6 +631,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             nfiles = get_input(index, ind, data_dir, input_dir)
             im_dir, wt_dir = input_dir, input_dir
 
+            # MAKE EXTENDED HEADER FOR REPROJECTING USING MONTAGE COMMANDS
+            input_table = os.path.join(im_dir, 'input.tbl')
+            montage.mImgtbl(im_dir, input_table, corners=corners)
+            template_header = os.path.join(_WORK_DIR, 'template.hdr')
+            montage.mMakeHdr(input_table, template_header, north_aligned=False, 
+                             system=None, equinox=None)
+            set_trace()
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
             converted_dir = os.path.join(gal_dir, 'converted')
