@@ -914,7 +914,8 @@ def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir):
     wt_masked_dir : str
         Path to temp directory for this galaxy in which to store masked weight files
     """
-    int_suff, rrhr_suff = '*_mjysr.fits', '*-rrhr.fits'
+    #int_suff, rrhr_suff = '*_mjysr.fits', '*-rrhr.fits'
+    int_suff, rrhr_suff = '*-int.fits', '*-rrhr.fits'
     int_images = sorted(glob.glob(os.path.join(im_dir, int_suff)))
     rrhr_images = sorted(glob.glob(os.path.join(wt_dir, rrhr_suff)))
 
