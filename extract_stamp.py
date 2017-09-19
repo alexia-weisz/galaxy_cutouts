@@ -637,15 +637,23 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             os.makedirs(converted_dir)
             convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
             im_dir, wt_dir = converted_dir, converted_dir
-            set_trace()
+
 
             # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
             gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
             
 
             # MASK IMAGES
-            im_dir, wt_dir = mask_images(im_dir, wt_dir, gal_dir)
-
+            masked_dir = os.path.join(gal_dir, 'masked')
+            os.makedirs(masked_dir)
+            int_masked_dir = os.path.join(masked_dir, 'int')
+            wt_masked_dir = os.path.join(masked_dir, 'rrhr')
+            os.makedirs(int_masked_dir)
+            os.makedirs(wt_masked_dir)
+            mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir)
+            im_dir = im_masked_dir
+            wt_dir = wt_masked_dir
+            set_trace()
 
             # REPROJECT IMAGES WITH EXTENDED HEADER
             reprojected_dir = os.path.join(gal_dir, 'reprojected')
@@ -830,7 +838,7 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
         else:
             continue
 
-    return converted_dir, converted_dir
+    return
 
 
 def counts2jy_galex(counts, cal, pix_as):
@@ -873,7 +881,7 @@ def wtpersr(wt, pix_as):
     return wt / (np.radians(pix_as/3600.))**2
 
 
-def mask_images(im_dir, wt_dir, gal_dir):
+def mask_images(im_dir, wt_dir, int_masked_dir, wt_masked_dir):
     """
     Mask pixels in the input images
 
@@ -893,14 +901,6 @@ def mask_images(im_dir, wt_dir, gal_dir):
     wt_masked_dir : str
         Path to directory containing the masked weight images
     """
-    masked_dir = os.path.join(gal_dir, 'masked')
-    os.makedirs(masked_dir)
-
-    int_masked_dir = os.path.join(masked_dir, 'int')
-    wt_masked_dir = os.path.join(masked_dir, 'rrhr')
-    os.makedirs(int_masked_dir)
-    os.makedirs(wt_masked_dir)
-
     int_suff, rrhr_suff = '*_mjysr.fits', '*-rrhr.fits'
     int_images = sorted(glob.glob(os.path.join(im_dir, int_suff)))
     rrhr_images = sorted(glob.glob(os.path.join(wt_dir, rrhr_suff)))
@@ -914,7 +914,7 @@ def mask_images(im_dir, wt_dir, gal_dir):
 
         mask_galex(image_infile, wt_infile, out_intfile=image_outfile, out_wtfile=wt_outfile)
 
-    return int_masked_dir, wt_masked_dir
+    return
 
 
 def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_intfile=None, out_wtfile=None):
