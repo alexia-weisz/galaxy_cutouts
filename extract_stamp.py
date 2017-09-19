@@ -638,10 +638,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             montage.mMakeHdr(input_table, template_header, north_aligned=False, system=None, equinox=None)
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
-            converted_dir = os.path.join(gal_dir, 'converted')
-            os.makedirs(converted_dir)
-            convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
-            im_dir, wt_dir = converted_dir, converted_dir
+            #converted_dir = os.path.join(gal_dir, 'converted')
+            #os.makedirs(converted_dir)
+            #convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
+            #im_dir, wt_dir = converted_dir, converted_dir
 
 
             # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
