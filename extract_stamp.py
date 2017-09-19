@@ -645,11 +645,12 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # MASK IMAGES
             masked_dir = os.path.join(gal_dir, 'masked')
-            os.makedirs(masked_dir)
             im_masked_dir = os.path.join(masked_dir, 'int')
             wt_masked_dir = os.path.join(masked_dir, 'rrhr')
-            os.makedirs(int_masked_dir)
+            os.makedirs(masked_dir)
+            os.makedirs(im_masked_dir)
             os.makedirs(wt_masked_dir)
+
             mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir)
             im_dir = im_masked_dir
             wt_dir = wt_masked_dir
