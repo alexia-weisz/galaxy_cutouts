@@ -630,11 +630,14 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             os.makedirs(input_dir)
             nfiles = get_input(index, ind, data_dir)
             im_dir, wt_dir = input_dir, input_dir
-            set_trace()
+
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
-            im_dir, wt_dir = convert_files(gal_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
-
+            converted_dir = os.path.join(gal_dir, 'converted')
+            os.makedirs(converted_dir)
+            convert_files(gal_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
+            im_dir, wt_dir = converted_dir, converted_dir
+            set_trace()
 
             # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
             gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
@@ -803,8 +806,7 @@ def convert_files(gal_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_as):
     converted_dir : str
         Path to directory containing images converted to flux density
     """
-    converted_dir = os.path.join(gal_dir, 'converted')
-    os.makedirs(converted_dir)
+    
 
     intfiles = sorted(glob.glob(os.path.join(im_dir, '*-int.fits')))
     wtfiles = sorted(glob.glob(os.path.join(wt_dir, '*-rrhr.fits')))
