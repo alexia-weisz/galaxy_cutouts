@@ -1011,7 +1011,7 @@ def reproject_images(template_header, input_dir, reproj_imtype_dir, imtype, whol
     # get image metadata from input images
     input_table = os.path.join(input_dir, imtype + '_input.tbl')
     montage.mImgtbl(input_dir, input_table, corners=corners, img_list=img_list)
-
+    set_trace()
     # Create reprojection directory, reproject, and get image metadata
     stats_table = os.path.join(reproj_imtype_dir, imtype+'_mProjExec_stats.log')
     montage.mProjExec(input_table, template_header, reproj_imtype_dir, stats_table, raw_dir=input_dir, 
