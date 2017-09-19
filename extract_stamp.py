@@ -70,7 +70,7 @@ class GalaxyHeader(object):
         return hdr
 
 
-    def _create_hdr_output(self, size_degrees, pixel_scale, factor):
+    def _create_hdr_output(self, size_degrees, pixel_scale, factor=1):
         """
         Create a header and write it to an ascii file for use in Montage
 
@@ -626,7 +626,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # GATHER THE INPUT FILES
-            im_dir, wt_dir, nfiles = get_input(index, ind, data_dir, gal_dir)
+            input_dir = os.path.join(gal_dir, 'input')
+            os.makedirs(input_dir)
+            nfiles = get_input(index, ind, data_dir)
+            im_dir, wt_dir = input_dir, input_dir
             set_trace()
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
@@ -727,7 +730,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
     return
 
 
-def get_input(index, ind, data_dir, gal_dir):
+def get_input(index, ind, data_dir, input_dir):
     """
     Gather the input files for creating mosaics and copy them into a temporary directory
 
@@ -739,7 +742,7 @@ def get_input(index, ind, data_dir, gal_dir):
         An array of indices into the index locating the correct files
     data_dir : str
         Path to location of raw data downloaded from GALEX (or other) server
-    gal_dir : str
+    input_dir : str
         Path to newly created temporary directory for storing temp files used in mosaicing
 
     Returns
@@ -749,8 +752,6 @@ def get_input(index, ind, data_dir, gal_dir):
     len(input_files) : int
         The number of files that will go into the mosaic.
     """
-    input_dir = os.path.join(gal_dir, 'input')
-    os.makedirs(input_dir)
     infiles = index[ind[0]]['fname']
     wtfiles = index[ind[0]]['rrhrfile']
     flgfiles = index[ind[0]]['flagfile']
@@ -773,7 +774,7 @@ def get_input(index, ind, data_dir, gal_dir):
         new_flg_file = os.path.join(input_dir, basename)
         os.symlink(flgfile, new_flg_file)
 
-    return input_dir, input_dir, len(infiles)
+    return len(infiles)
 
 
 def convert_files(gal_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_as):
