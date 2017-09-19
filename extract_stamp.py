@@ -635,7 +635,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
             converted_dir = os.path.join(gal_dir, 'converted')
             os.makedirs(converted_dir)
-            convert_files(gal_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
+            convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
             im_dir, wt_dir = converted_dir, converted_dir
             set_trace()
 
@@ -780,7 +780,7 @@ def get_input(index, ind, data_dir, input_dir):
     return len(infiles)
 
 
-def convert_files(gal_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_as):
+def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_as):
     """
     Convert GALEX files from cts/sec to MJy/sr
 
@@ -807,7 +807,6 @@ def convert_files(gal_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_as):
         Path to directory containing images converted to flux density
     """
     
-
     intfiles = sorted(glob.glob(os.path.join(im_dir, '*-int.fits')))
     wtfiles = sorted(glob.glob(os.path.join(wt_dir, '*-rrhr.fits')))
 
