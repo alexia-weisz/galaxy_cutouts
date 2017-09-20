@@ -688,7 +688,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # WEIGHT IMAGES
-            weight_dir = os.path.join(gal_dir, 'weight')
+            weight_dir = os.path.join(gal_dir, 'weighted')
             im_weight_dir = os.path.join(weight_dir, 'int')
             wt_weight_dir = os.path.join(weight_dir, 'rrhr')
             for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
