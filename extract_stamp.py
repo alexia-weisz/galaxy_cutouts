@@ -1080,7 +1080,8 @@ def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir):
     wt_weight_dir : str
         Path to subdirectory containgn the weights images (same as before, they haven't changed)    
     """
-    im_suff, wt_suff = '*_mjysr.fits', '*-rrhr.fits'
+    #im_suff, wt_suff = '*_mjysr.fits', '*-rrhr.fits'
+    im_suff, wt_suff = '*-int.fits', '*-rrhr.fits'
     imfiles = sorted(glob.glob(os.path.join(im_dir, im_suff)))
     wtfiles = sorted(glob.glob(os.path.join(wt_dir, wt_suff)))    
 
