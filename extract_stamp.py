@@ -710,9 +710,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             #coadd(gal_hdr.hdrfile, final_dir, wt_dir, output='weights', add_type='mean')
             #coadd(gal_hdr.hdrfile, final_dir, im_dir, output='int', add_type='mean')
             #coadd(gal_hdr.hdrfile, final_dir, im_dir, output='count', add_type='count')
-            coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
             coadd(template_header, final_dir, im_dir, output='int', add_type='mean')
+            coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
 
+            
             # DIVIDE OUT THE WEIGHTS
             imagefile = finish_weight(final_dir)
 
