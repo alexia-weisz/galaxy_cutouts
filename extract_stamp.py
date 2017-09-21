@@ -673,7 +673,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             reproject_images(template_header, wt_dir, reproj_wt_dir, 'rrhr')
             im_dir = reproj_im_dir
             wt_dir = reproj_wt_dir
-
+            set_trace()
 
             # MODEL THE BACKGROUND IN THE IMAGE FILES WITH THE EXTENDED HEADER
             if model_bg:
@@ -701,7 +701,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
             weight_table = create_table(wt_dir, dir_type='weights')
             weighted_table = create_table(im_dir, dir_type='int')
-            count_table = create_table(im_dir, dir_type='count')
+            #count_table = create_table(im_dir, dir_type='count')
 
 
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
@@ -712,7 +712,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             #coadd(gal_hdr.hdrfile, final_dir, im_dir, output='count', add_type='count')
             coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
             coadd(template_header, final_dir, im_dir, output='int', add_type='mean')
-            coadd(template_header, final_dir, im_dir, output='count', add_type='count')
+            #coadd(template_header, final_dir, im_dir, output='count', add_type='count')
 
             # DIVIDE OUT THE WEIGHTS
             imagefile = finish_weight(final_dir)
@@ -730,10 +730,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # COPY MOSAIC FILES TO CUTOUTS DIRECTORY
             mosaic_file = os.path.join(final_dir, 'final_mosaic.fits')
             weight_file = os.path.join(final_dir, 'weights_mosaic.fits')
-            count_file = os.path.join(final_dir, 'count_mosaic.fits')
+            #count_file = os.path.join(final_dir, 'count_mosaic.fits')
 
-            newsuffs = ['.FITS', '_weight.FITS', '_count.FITS']
-            oldfiles = [mosaic_file, weight_file, count_file]
+            newsuffs = ['.FITS', '_weight.FITS']#, '_count.FITS']
+            oldfiles = [mosaic_file, weight_file]#, count_file]
             newfiles = ['_'.join([name, band]).upper() + s for s in newsuffs]
 
             for files in zip(oldfiles, newfiles):
@@ -981,7 +981,7 @@ def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_i
         astropy.io.fits.writeto(out_wtfile, wt, whdr)
 
 
-def reproject_images(template_header, input_dir, reproj_imtype_dir, imtype, whole=True, exact=True, corners=True, img_list=None):
+def reproject_images(template_header, input_dir, reproj_dir, imtype, whole=True, exact=True, corners=True, img_list=None):
     """
     Reproject input images to a new WCS as given by a template header
 
@@ -1014,11 +1014,11 @@ def reproject_images(template_header, input_dir, reproj_imtype_dir, imtype, whol
     montage.mImgtbl(input_dir, input_table, corners=corners, img_list=img_list)
 
     # Create reprojection directory, reproject, and get image metadata
-    stats_table = os.path.join(reproj_imtype_dir, imtype+'_mProjExec_stats.log')
-    montage.mProjExec(input_table, template_header, reproj_imtype_dir, stats_table, raw_dir=input_dir, 
+    stats_table = os.path.join(reproj_dir, imtype+'_mProjExec_stats.log')
+    montage.mProjExec(input_table, template_header, reproj_dir, stats_table, raw_dir=input_dir, 
                       whole=whole, exact=exact)
-    reprojected_table = os.path.join(reproj_imtype_dir, imtype + '_reprojected.tbl')
-    montage.mImgtbl(reproj_imtype_dir, reprojected_table, corners=corners)
+    reprojected_table = os.path.join(reproj_dir, imtype + '_reprojected.tbl')
+    montage.mImgtbl(reproj_dir, reprojected_table, corners=corners)
 
 
 def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header, level_only=True):
