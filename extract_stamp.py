@@ -673,7 +673,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             reproject_images(template_header, wt_dir, reproj_wt_dir, 'rrhr')
             im_dir = reproj_im_dir
             wt_dir = reproj_wt_dir
-            set_trace()
+
 
             # MODEL THE BACKGROUND IN THE IMAGE FILES WITH THE EXTENDED HEADER
             if model_bg:
@@ -683,8 +683,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 for outdir in [bg_model_dir, diff_dir, corr_dir]:
                     os.makedirs(outdir)
                 #bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, level_only=False)
-                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, level_only=False)
-                im_dir = corr_dir
+                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=False)
+                bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
+                im_dir = os.path.join(corr_dir, 'int')
+                wt_dir = os.path.join(corr_dir, 'rrhr')
 
 
             # WEIGHT IMAGES
@@ -701,7 +703,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
             weight_table = create_table(wt_dir, dir_type='weights')
             weighted_table = create_table(im_dir, dir_type='int')
-            #count_table = create_table(im_dir, dir_type='count')
 
 
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
@@ -712,7 +713,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             #coadd(gal_hdr.hdrfile, final_dir, im_dir, output='count', add_type='count')
             coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
             coadd(template_header, final_dir, im_dir, output='int', add_type='mean')
-            #coadd(template_header, final_dir, im_dir, output='count', add_type='count')
 
             # DIVIDE OUT THE WEIGHTS
             imagefile = finish_weight(final_dir)
@@ -730,10 +730,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # COPY MOSAIC FILES TO CUTOUTS DIRECTORY
             mosaic_file = os.path.join(final_dir, 'final_mosaic.fits')
             weight_file = os.path.join(final_dir, 'weights_mosaic.fits')
-            #count_file = os.path.join(final_dir, 'count_mosaic.fits')
 
-            newsuffs = ['.FITS', '_weight.FITS']#, '_count.FITS']
-            oldfiles = [mosaic_file, weight_file]#, count_file]
+            newsuffs = ['.FITS', '_weight.FITS']
+            oldfiles = [mosaic_file, weight_file]
             newfiles = ['_'.join([name, band]).upper() + s for s in newsuffs]
 
             for files in zip(oldfiles, newfiles):
@@ -1021,7 +1020,7 @@ def reproject_images(template_header, input_dir, reproj_dir, imtype, whole=True,
     montage.mImgtbl(reproj_dir, reprojected_table, corners=corners)
 
 
-def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header, level_only=True):
+def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=True):
     """
     Model the background for the mosaiced image
 
@@ -1041,7 +1040,9 @@ def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header,
         Montage argument: Adjust background levels only, don't try to fit the slope (Default: True)
     """
     # FIND OVERLAPS
-    reprojected_table = os.path.join(reprojected_dir,'int_reprojected.tbl')
+    diff_dir = os.path.join(diff_dir, im_type)
+    os.makedirs(diff_dir)
+    reprojected_table = os.path.join(reprojected_dir, im_type + '_reprojected.tbl')
     diffs_table = os.path.join(diff_dir, 'differences.tbl')
     montage.mOverlaps(reprojected_table, diffs_table)
 
@@ -1054,6 +1055,8 @@ def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header,
     montage.mFitExec(diffs_table, fits_table, diff_dir)
 
     # CALCULATE CORRECTIONS
+    corr_dir = os.path.join(corr_dir, im_type)
+    os.makedirs(corr_dir)
     corrections_table = os.path.join(corr_dir, 'corrections.tbl')
     montage.mBgModel(reprojected_table, fits_table, corrections_table,
                      level_only=level_only)
