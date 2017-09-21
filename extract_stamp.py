@@ -684,11 +684,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                     os.makedirs(outdir)
                 #bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, level_only=False)
                 bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=False)
-                bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
+                #bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
                 im_dir = os.path.join(corr_dir, 'int')
-                wt_dir = os.path.join(corr_dir, 'rrhr')
+                #wt_dir = os.path.join(corr_dir, 'rrhr')
 
-            set_trace()
             # WEIGHT IMAGES
             weight_dir = os.path.join(gal_dir, 'weighted')
             im_weight_dir = os.path.join(weight_dir, 'int')
