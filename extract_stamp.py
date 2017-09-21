@@ -634,8 +634,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # MAKE EXTENDED HEADER FOR REPROJECTING USING MONTAGE COMMANDS
             input_table = os.path.join(im_dir, 'input.tbl')
             montage.mImgtbl(im_dir, input_table, corners=True)
-            template_header = os.path.join(_WORK_DIR, 'template.hdr')
-            montage.mMakeHdr(input_table, template_header, north_aligned=False, system=None, equinox=None)
+            #template_header = os.path.join(_WORK_DIR, 'template.hdr')
+            #montage.mMakeHdr(input_table, template_header, north_aligned=False, system=None, equinox=None)
+
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
             converted_dir = os.path.join(gal_dir, 'converted')
@@ -645,7 +646,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
-            #gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
+            gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
             
 
             # MASK IMAGES
@@ -667,10 +668,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             for outdir in [reprojected_dir, reproj_im_dir, reproj_wt_dir]:
                 os.makedirs(outdir)
 
-            #reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_im_dir, 'int')
-            #reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, 'rrhr')
-            reproject_images(template_header, im_dir, reproj_im_dir, 'int')
-            reproject_images(template_header, wt_dir, reproj_wt_dir, 'rrhr')
+            reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_im_dir, 'int')
+            reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, 'rrhr')
+            #reproject_images(template_header, im_dir, reproj_im_dir, 'int')
+            #reproject_images(template_header, wt_dir, reproj_wt_dir, 'rrhr')
             im_dir = reproj_im_dir
             wt_dir = reproj_wt_dir
 
@@ -682,9 +683,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 corr_dir = os.path.join(bg_model_dir, 'corrected')
                 for outdir in [bg_model_dir, diff_dir, corr_dir]:
                     os.makedirs(outdir)
-                #bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, level_only=False)
-                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=False)
-                bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
+                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='int', level_only=False)
+                bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='rrhr', level_only=False)
+                #bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=False)
+                #bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
                 im_dir = os.path.join(corr_dir, 'int')
                 wt_dir = os.path.join(corr_dir, 'rrhr')
 
@@ -708,11 +710,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
             final_dir = os.path.join(gal_dir, 'mosaic')
             os.makedirs(final_dir)
-            #coadd(gal_hdr.hdrfile, final_dir, wt_dir, output='weights', add_type='mean')
-            #coadd(gal_hdr.hdrfile, final_dir, im_dir, output='int', add_type='mean')
-            #coadd(gal_hdr.hdrfile, final_dir, im_dir, output='count', add_type='count')
-            coadd(template_header, final_dir, im_dir, output='int', add_type='mean')
-            coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
+            coadd(gal_hdr.hdrfile_ext, final_dir, wt_dir, output='weights', add_type='mean')
+            coadd(gal_hdr.hdrfile_ext, final_dir, im_dir, output='int', add_type='mean')
+            #coadd(template_header, final_dir, im_dir, output='int', add_type='mean')
+            #coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
 
 
             # DIVIDE OUT THE WEIGHTS
@@ -861,8 +862,8 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
 
     # adjust header so that we know the units have changed
     if hdr is not None:
-        #hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
-        hdr['BUNIT'] = 'MJY/SR'
+        hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
+        
 
 def counts2jy_galex(counts, cal, pix_as):
     """
