@@ -852,9 +852,11 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
                 im = counts2jy_galex(im, nuv_toab, pix_as)
             if not os.path.exists(int_outfiles[i]):
                 #im -= np.mean(im)  # subtract out the mean of each image
-                astropy.io.fits.writeto(int_outfiles[i], im, hdr)
+                #astropy.io.fits.writeto(int_outfiles[i], im, hdr)
+                astropy.io.fits.writeto(intfiles[i], im, hdr)
             if not os.path.exists(wt_outfiles[i]):
-                astropy.io.fits.writeto(wt_outfiles[i], wt, whdr)
+                #astropy.io.fits.writeto(wt_outfiles[i], wt, whdr)
+                astropy.io.fits.writeto(wtfiles[i], wt, whdr)
         else:
             continue
 
