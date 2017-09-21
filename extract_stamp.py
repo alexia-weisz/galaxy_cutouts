@@ -688,7 +688,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 im_dir = os.path.join(corr_dir, 'int')
                 wt_dir = os.path.join(corr_dir, 'rrhr')
 
-
+            set_trace()
             # WEIGHT IMAGES
             weight_dir = os.path.join(gal_dir, 'weighted')
             im_weight_dir = os.path.join(weight_dir, 'int')
