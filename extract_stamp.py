@@ -860,7 +860,7 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
 
     # adjust header so that we know the units have changed
     if hdr is not None:
-        gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
+        hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
 
 
 def counts2jy_galex(counts, cal, pix_as):
