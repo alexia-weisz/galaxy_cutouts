@@ -638,10 +638,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             montage.mMakeHdr(input_table, template_header, north_aligned=False, system=None, equinox=None)
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
-            #converted_dir = os.path.join(gal_dir, 'converted')
-            #os.makedirs(converted_dir)
-            #convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS, hdr=gal_hdr)
-            #im_dir, wt_dir = converted_dir, converted_dir
+            converted_dir = os.path.join(gal_dir, 'converted')
+            os.makedirs(converted_dir)
+            convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS, hdr=gal_hdr)
+            im_dir, wt_dir = converted_dir, converted_dir
 
 
             # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
@@ -684,9 +684,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                     os.makedirs(outdir)
                 #bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, level_only=False)
                 bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=False)
-                #bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
+                bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
                 im_dir = os.path.join(corr_dir, 'int')
-                #wt_dir = os.path.join(corr_dir, 'rrhr')
+                wt_dir = os.path.join(corr_dir, 'rrhr')
+
 
             # WEIGHT IMAGES
             weight_dir = os.path.join(gal_dir, 'weighted')
@@ -713,7 +714,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             coadd(template_header, final_dir, im_dir, output='int', add_type='mean')
             coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
 
-            
+
             # DIVIDE OUT THE WEIGHTS
             imagefile = finish_weight(final_dir)
 
