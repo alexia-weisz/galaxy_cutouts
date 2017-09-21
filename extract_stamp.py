@@ -640,12 +640,12 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
             #converted_dir = os.path.join(gal_dir, 'converted')
             #os.makedirs(converted_dir)
-            #convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
+            #convert_files(converted_dir, im_dir, wt_dir, gal_hdr, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
             #im_dir, wt_dir = converted_dir, converted_dir
 
 
             # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
-            gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
+            #gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
             
 
             # MASK IMAGES
@@ -812,7 +812,7 @@ def get_input(index, ind, data_dir, input_dir):
     return len(infiles)
 
 
-def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_as):
+def convert_files(converted_dir, im_dir, wt_dir, gal_hdr, band, fuv_toab, nuv_toab, pix_as):
     """
     Convert GALEX files from cts/sec to MJy/sr
 
@@ -856,6 +856,9 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
                 astropy.io.fits.writeto(wt_outfiles[i], wt, whdr)
         else:
             continue
+
+    # adjust header so that we know the units have changed
+    gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
 
 
 def counts2jy_galex(counts, cal, pix_as):
