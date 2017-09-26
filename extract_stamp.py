@@ -720,20 +720,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # DIVIDE OUT THE WEIGHTS
             imagefile = finish_weight(penultimate_dir)
 
-            sys.exit()
-            # FINAL REPROJECT TO DESIRED SIZES
-            pen_table = os.path.join(penultimate_dir, 'pen.tbl')
-            montage.mImgtbl(penultimate_dir, pen_table, corners=corners)
-
-            # Create reprojection directory, reproject, and get image metadata
-            final_stats_table = os.path.join(final_dir, 'final_mProjExec_stats.log')
-            montage.mProjExec(pen_table, gal_hdr.hdrfile, final_dir, final_stats_table, raw_dir=penultimate_dir, 
-                              whole=True, exact=True)
-            reprojected_table = os.path.join(final, 'final_reprojected.tbl')
-            montage.mImgtbl(final_dir, reprojected_table, corners=corners)
-
-            #imagefile = 
-
 
             # SUBTRACT OUT THE BACKGROUND
             rm_overall_bg = False
