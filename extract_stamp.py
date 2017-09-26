@@ -776,10 +776,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
         # SOMETHING WENT WRONG -- WRITE ERROR TO FILE
         except Exception as inst:
-            me = sys.exc_info()[0]
+            me = sys.exc_info()#[0]
             with open(problem_file, 'a') as myfile:
                 myfile.write(name + ': ' + str(me) + ': '+str(inst)+'\n')
-            shutil.rmtree(gal_dir, ignore_errors=True)
+            #shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
 
