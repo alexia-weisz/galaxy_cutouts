@@ -593,7 +593,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             ext = 1
             index, hdr = astropy.io.fits.getdata(indexfile, ext, header=True)
 
-
         # CALCULATE TILE OVERLAP
         tile_overlaps = calc_tile_overlap(ra_ctr, dec_ctr, pad=size_deg,
                                           min_ra=index['MIN_RA'],
@@ -720,6 +719,20 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # DIVIDE OUT THE WEIGHTS
             imagefile = finish_weight(penultimate_dir)
 
+            sys.exit()
+            # FINAL REPROJECT TO DESIRED SIZES
+            pen_table = os.path.join(penultimate_dir, 'pen.tbl')
+            montage.mImgtbl(penultimate_dir, pen_table, corners=corners)
+
+            # Create reprojection directory, reproject, and get image metadata
+            final_stats_table = os.path.join(final_dir, 'final_mProjExec_stats.log')
+            montage.mProjExec(pen_table, gal_hdr.hdrfile, final_dir, final_stats_table, raw_dir=penultimate_dir, 
+                              whole=True, exact=True)
+            reprojected_table = os.path.join(final, 'final_reprojected.tbl')
+            montage.mImgtbl(final_dir, reprojected_table, corners=corners)
+
+            #imagefile = 
+
 
             # SUBTRACT OUT THE BACKGROUND
             rm_overall_bg = False
@@ -762,10 +775,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
         # SOMETHING WENT WRONG -- WRITE ERROR TO FILE
         except Exception as inst:
-            me = sys.exc_info()#[0]
+            me = sys.exc_info()[0]
             with open(problem_file, 'a') as myfile:
                 myfile.write(name + ': ' + str(me) + ': '+str(inst)+'\n')
-            #shutil.rmtree(gal_dir, ignore_errors=True)
+            shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
 
@@ -796,7 +809,8 @@ def get_input(index, ind, data_dir, input_dir):
     infiles = [os.path.join(data_dir, f) for f in infiles]
     wtfiles = [os.path.join(data_dir, f) for f in wtfiles]
     flgfiles = [os.path.join(data_dir, f) for f in flgfiles]
-
+    print([os.path.basename(infile) for infile in infiles])
+    sys.exit()
     for infile in infiles:
         basename = os.path.basename(infile)
         new_in_file = os.path.join(input_dir, basename)
