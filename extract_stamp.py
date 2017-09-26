@@ -708,16 +708,31 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
+            penultimate_dir = os.path.join(gal_dir, 'large_mosaic')
             final_dir = os.path.join(gal_dir, 'mosaic')
-            os.makedirs(final_dir)
-            coadd(gal_hdr.hdrfile_ext, final_dir, wt_dir, output='weights', add_type='mean')
-            coadd(gal_hdr.hdrfile_ext, final_dir, im_dir, output='int', add_type='mean')
+            os.makedirs([penultimate_dir, final_dir])
+            coadd(gal_hdr.hdrfile_ext, penultimate_dir, wt_dir, output='weights', add_type='mean')
+            coadd(gal_hdr.hdrfile_ext, penultimate_dir, im_dir, output='int', add_type='mean')
             #coadd(template_header, final_dir, im_dir, output='int', add_type='mean')
             #coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
 
 
             # DIVIDE OUT THE WEIGHTS
-            imagefile = finish_weight(final_dir)
+            imagefile = finish_weight(penultimate_dir)
+
+            sys.exit()
+            # FINAL REPROJECT TO DESIRED SIZES
+            pen_table = os.path.join(penultimate_dir, 'pen.tbl')
+            montage.mImgtbl(penultimate_dir, pen_table, corners=corners)
+
+            # Create reprojection directory, reproject, and get image metadata
+            final_stats_table = os.path.join(final_dir, 'final_mProjExec_stats.log')
+            montage.mProjExec(pen_table, gal_hdr.hdrfile, final_dir, final_stats_table, raw_dir=penultimate_dir, 
+                              whole=True, exact=True)
+            reprojected_table = os.path.join(final, 'final_reprojected.tbl')
+            montage.mImgtbl(final_dir, reprojected_table, corners=corners)
+
+            #imagefile = 
 
 
             # SUBTRACT OUT THE BACKGROUND
