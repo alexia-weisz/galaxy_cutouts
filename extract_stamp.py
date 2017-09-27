@@ -809,8 +809,7 @@ def get_input(index, ind, data_dir, input_dir):
     infiles = [os.path.join(data_dir, f) for f in infiles]
     wtfiles = [os.path.join(data_dir, f) for f in wtfiles]
     flgfiles = [os.path.join(data_dir, f) for f in flgfiles]
-    print([os.path.basename(infile) for infile in infiles])
-    sys.exit()
+
     for infile in infiles:
         basename = os.path.basename(infile)
         new_in_file = os.path.join(input_dir, basename)
