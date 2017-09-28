@@ -674,22 +674,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             im_dir = reproj_im_dir
             wt_dir = reproj_wt_dir
 
-
-            # MODEL THE BACKGROUND IN THE IMAGE FILES WITH THE EXTENDED HEADER
-            if model_bg:
-                bg_model_dir = os.path.join(gal_dir, 'background_model')
-                diff_dir = os.path.join(bg_model_dir, 'differences')
-                corr_dir = os.path.join(bg_model_dir, 'corrected')
-                for outdir in [bg_model_dir, diff_dir, corr_dir]:
-                    os.makedirs(outdir)
-                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='int', level_only=False)
-                bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='rrhr', level_only=False)
-                #bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=False)
-                #bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
-                im_dir = os.path.join(corr_dir, 'int')
-                wt_dir = os.path.join(corr_dir, 'rrhr')
-
-
             # WEIGHT IMAGES
             weight_dir = os.path.join(gal_dir, 'weighted')
             im_weight_dir = os.path.join(weight_dir, 'int')
@@ -699,6 +683,31 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
             im_dir = im_weight_dir
             wt_dir = wt_weight_dir
+
+            # MODEL THE BACKGROUND IN THE IMAGE FILES WITH THE EXTENDED HEADER
+            if model_bg:
+                bg_model_dir = os.path.join(gal_dir, 'background_model')
+                diff_dir = os.path.join(bg_model_dir, 'differences')
+                corr_dir = os.path.join(bg_model_dir, 'corrected')
+                for outdir in [bg_model_dir, diff_dir, corr_dir]:
+                    os.makedirs(outdir)
+                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='int', level_only=False)
+                #bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='rrhr', level_only=False)
+                #bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=False)
+                #bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
+                im_dir = os.path.join(corr_dir, 'int')
+                #wt_dir = os.path.join(corr_dir, 'rrhr')
+
+
+            # WEIGHT IMAGES
+            #weight_dir = os.path.join(gal_dir, 'weighted')
+            #im_weight_dir = os.path.join(weight_dir, 'int')
+            #wt_weight_dir = os.path.join(weight_dir, 'rrhr')
+            #for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
+            #    os.makedirs(outdir)
+            #weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
+            #im_dir = im_weight_dir
+            #wt_dir = wt_weight_dir
 
 
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
