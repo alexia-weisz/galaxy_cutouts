@@ -674,18 +674,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             im_dir = reproj_im_dir
             wt_dir = reproj_wt_dir
 
-            # WEIGHT IMAGES
-            weight_dir = os.path.join(gal_dir, 'weighted')
-            im_weight_dir = os.path.join(weight_dir, 'int')
-            wt_weight_dir = os.path.join(weight_dir, 'rrhr')
-            for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
-                os.makedirs(outdir)
-            weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
-            im_dir = im_weight_dir
-            wt_dir = wt_weight_dir
-
-            weight_table = create_table(wt_dir, dir_type='weights')
-            weighted_table = create_table(im_dir, dir_type='int')
 
             # MODEL THE BACKGROUND IN THE IMAGE FILES WITH THE EXTENDED HEADER
             if model_bg:
@@ -703,19 +691,19 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # WEIGHT IMAGES
-            #weight_dir = os.path.join(gal_dir, 'weighted')
-            #im_weight_dir = os.path.join(weight_dir, 'int')
-            #wt_weight_dir = os.path.join(weight_dir, 'rrhr')
-            #for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
-            #    os.makedirs(outdir)
-            #weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
-            #im_dir = im_weight_dir
-            #wt_dir = wt_weight_dir
+            weight_dir = os.path.join(gal_dir, 'weighted')
+            im_weight_dir = os.path.join(weight_dir, 'int')
+            wt_weight_dir = os.path.join(weight_dir, 'rrhr')
+            for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
+                os.makedirs(outdir)
+            weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
+            im_dir = im_weight_dir
+            wt_dir = wt_weight_dir
 
 
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
-            #weight_table = create_table(wt_dir, dir_type='weights')
-            #weighted_table = create_table(im_dir, dir_type='int')
+            weight_table = create_table(wt_dir, dir_type='weights')
+            weighted_table = create_table(im_dir, dir_type='int')
 
 
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
