@@ -633,9 +633,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # MAKE EXTENDED HEADER FOR REPROJECTING USING MONTAGE COMMANDS
             input_table = os.path.join(im_dir, 'input.tbl')
             montage.mImgtbl(im_dir, input_table, corners=True)
-            #template_header = os.path.join(_WORK_DIR, 'template.hdr')
-            #montage.mMakeHdr(input_table, template_header, north_aligned=False, system=None, equinox=None)
-
+           
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
             converted_dir = os.path.join(gal_dir, 'converted')
@@ -669,8 +667,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_im_dir, 'int')
             reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, 'rrhr')
-            #reproject_images(template_header, im_dir, reproj_im_dir, 'int')
-            #reproject_images(template_header, wt_dir, reproj_wt_dir, 'rrhr')
             im_dir = reproj_im_dir
             wt_dir = reproj_wt_dir
 
@@ -684,8 +680,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                     os.makedirs(outdir)
                 bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='int', level_only=False)
                 bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='rrhr', level_only=False)
-                #bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=False)
-                #bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='rrhr', level_only=False)
                 im_dir = os.path.join(corr_dir, 'int')
                 wt_dir = os.path.join(corr_dir, 'rrhr')
 
@@ -696,6 +690,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             wt_weight_dir = os.path.join(weight_dir, 'rrhr')
             for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
                 os.makedirs(outdir)
+
             weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
             im_dir = im_weight_dir
             wt_dir = wt_weight_dir
@@ -709,29 +704,15 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
             penultimate_dir = os.path.join(gal_dir, 'large_mosaic')
             final_dir = os.path.join(gal_dir, 'mosaic')
-            os.makedirs([penultimate_dir, final_dir])
+            for outdir in [penultimate_dir, final_dir]:
+                os.makedirs(outdir)
+            
             coadd(gal_hdr.hdrfile_ext, penultimate_dir, wt_dir, output='weights', add_type='mean')
             coadd(gal_hdr.hdrfile_ext, penultimate_dir, im_dir, output='int', add_type='mean')
-            #coadd(template_header, final_dir, im_dir, output='int', add_type='mean')
-            #coadd(template_header, final_dir, wt_dir, output='weights', add_type='mean')
-
+           
 
             # DIVIDE OUT THE WEIGHTS
             imagefile = finish_weight(penultimate_dir)
-
-            sys.exit()
-            # FINAL REPROJECT TO DESIRED SIZES
-            pen_table = os.path.join(penultimate_dir, 'pen.tbl')
-            montage.mImgtbl(penultimate_dir, pen_table, corners=corners)
-
-            # Create reprojection directory, reproject, and get image metadata
-            final_stats_table = os.path.join(final_dir, 'final_mProjExec_stats.log')
-            montage.mProjExec(pen_table, gal_hdr.hdrfile, final_dir, final_stats_table, raw_dir=penultimate_dir, 
-                              whole=True, exact=True)
-            reprojected_table = os.path.join(final, 'final_reprojected.tbl')
-            montage.mImgtbl(final_dir, reprojected_table, corners=corners)
-
-            #imagefile = 
 
 
             # SUBTRACT OUT THE BACKGROUND
