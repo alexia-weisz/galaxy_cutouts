@@ -679,9 +679,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 for outdir in [bg_model_dir, diff_dir, corr_dir]:
                     os.makedirs(outdir)
                 bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='int', level_only=False)
-                bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='rrhr', level_only=False)
+                #bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='rrhr', level_only=False)
                 im_dir = os.path.join(corr_dir, 'int')
-                wt_dir = os.path.join(corr_dir, 'rrhr')
+                #wt_dir = os.path.join(corr_dir, 'rrhr')
 
 
             # WEIGHT IMAGES
