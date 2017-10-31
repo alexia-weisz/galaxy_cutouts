@@ -800,6 +800,8 @@ def get_input(index, ind, data_dir, input_dir, hdr=None):
         basename = os.path.basename(infile)
         new_in_file = os.path.join(input_dir, basename)
         os.symlink(infile, new_in_file)
+        if hdr is not None:
+            hdr.append2hdr(keyword='INFILE', value=basename, ext=False)
 
     for wtfile in wtfiles:
         basename = os.path.basename(wtfile)
@@ -810,10 +812,6 @@ def get_input(index, ind, data_dir, input_dir, hdr=None):
     #    basename = os.path.basename(flgfile)
     #    new_flg_file = os.path.join(input_dir, basename)
     #    os.symlink(flgfile, new_flg_file)
-
-    if hdr is not None:
-        imfiles = [os.path.basename(infile) for infile in infiles]
-        hdr.append2hdr(keyword='INFILES', value=imfiles, ext=False)
 
     return len(infiles)
 
