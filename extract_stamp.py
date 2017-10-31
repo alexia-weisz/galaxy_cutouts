@@ -574,6 +574,16 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
         Write info about each mosaic to file (Default: True) -- NO LONGER USED?
     model_bg : bool, optional
         Model the background of the mosaiced image (Default: False)
+    weight_ims : bool, optional
+         weight the input images with the weights images
+    convert_mjysr : bool, optional
+        convert input images from counts/sec to MJy/sr
+    desired_pix_scale : float, optional
+        Desired pixel scale of output image. Default is currently set to GALEX pixel scale (Default: 1.5)
+    imtype : str, optional
+        input image type to use from galex (Default: int)
+    wttype : str, optional
+        input weights image type to use from galex (Default: rrhr)
     """
     ttype = 'galex'
     data_dir = os.path.join(_TOP_DIR, ttype, 'sorted_tiles')
@@ -589,7 +599,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
         # READ THE INDEX FILE (IF NOT PASSED IN)
         if index is None:
-            indexfile = os.path.join(_INDEX_DIR, ttype + '_index_file.fits')
+            indexfile = os.path.join(_INDEX_DIR, 'galex_index_file.fits')
             ext = 1
             index, hdr = astropy.io.fits.getdata(indexfile, ext, header=True)
 
@@ -639,7 +649,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             if convert_mjysr:
                 converted_dir = os.path.join(gal_dir, 'converted')
                 os.makedirs(converted_dir)
-                convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
+                convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, desired_pix_scale)
                 im_dir, wt_dir = converted_dir, converted_dir
 
 
@@ -789,10 +799,10 @@ def get_input(index, ind, data_dir, input_dir, hdr=None):
     """
     infiles = index[ind[0]]['fname']
     wtfiles = index[ind[0]]['rrhrfile']
-    #flgfiles = index[ind[0]]['flagfile']
+    flgfiles = index[ind[0]]['flagfile']
     infiles = [os.path.join(data_dir, f) for f in infiles]
     wtfiles = [os.path.join(data_dir, f) for f in wtfiles]
-    #flgfiles = [os.path.join(data_dir, f) for f in flgfiles]
+    flgfiles = [os.path.join(data_dir, f) for f in flgfiles]
 
     for i, infile in enumerate(infiles):
         basename = os.path.basename(infile)
@@ -807,10 +817,10 @@ def get_input(index, ind, data_dir, input_dir, hdr=None):
         new_wt_file = os.path.join(input_dir, basename)
         os.symlink(wtfile, new_wt_file)
 
-    #for flgfile in flgfiles:
-    #    basename = os.path.basename(flgfile)
-    #    new_flg_file = os.path.join(input_dir, basename)
-    #    os.symlink(flgfile, new_flg_file)
+    for flgfile in flgfiles:
+        basename = os.path.basename(flgfile)
+        new_flg_file = os.path.join(input_dir, basename)
+        os.symlink(flgfile, new_flg_file)
 
     return len(infiles)
 
