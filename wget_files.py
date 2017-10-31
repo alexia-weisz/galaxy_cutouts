@@ -18,7 +18,7 @@ BAND = 'fuv'
 
 
 #galex_file_suffixes = ['-int', '-cnt', '-exp', '-rrhr', '-skybg', '-intbgsub', '-wt', '-flags', '-objmask', '-cat']
-galex_file_suffixes = ['-intbgsub']
+galex_file_suffixes = ['-int', '-intbgsub', '-rrhr']
 
 def get_args():
 	parser = argparse.ArgumentParser()
