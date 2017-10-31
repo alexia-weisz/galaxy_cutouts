@@ -20,7 +20,8 @@ def get_args():
     parser.add_argument('--band', default=None, help='waveband. Default: None (does all)')
     parser.add_argument('--cutout', action='store_true')
     parser.add_argument('--model_bg', action='store_true', help='model the background to match all images as best as possible.')
-    parser.add_argument('--weight_images', action='store_true', help='weight the input images by the desired weight images')
+    parser.add_argument('--weight_ims', action='store_true', help='weight the input images by the desired weight images')
+    parser.add_argument('--convert_mjysr', action='store_true', help='convert images to MJy/sr.')
     parser.add_argument('--galaxy_list', default=None, help='Galaxy name if doing a single cutout or list of names. Default: None')
     parser.add_argument('--all_galaxies', action='store_true', help='run all galaxies in database. Default: False; include flag to store_true')
     parser.add_argument('--tag', default=None, help='tag to select galaxies, i.e., SINGS, HERACLES, etc. Default: None')
@@ -41,8 +42,10 @@ def main(**kwargs):
         create a cutout
     model_bg : bool
         model the background in Montage
-    weight_images : bool
+    weight_ims : bool
         weight the input images with the weights images
+    convert_mjysr : bool
+        convert input images from counts/sec to MJy/sr
     galaxy_list : list
         list of one or more galaxies for which to make cutouts. Do not set if you want to make cutouts for all galaxies (Default: None)
     all_galaxies : bool
@@ -86,7 +89,7 @@ def main(**kwargs):
             ra_ctr, dec_ctr = gals['ra_deg'], gals['dec_deg']
 
             stamp_kwargs = {'ra_ctr': ra_ctr, 'dec_ctr': dec_ctr, 'size_deg': size_deg, 'name': galname, 'model_bg': kwargs['model_bg'], 
-                            'weight_images': kwargs['weight_images']}
+                            'weight_ims': kwargs['weight_ims'], 'convert_mjysr': kwargs['convert_mjysr']}
             if wband == 'fuv':
                 extract_stamp.galex(band='fuv', **stamp_kwargs)#ra_ctr=ra_ctr, dec_ctr=dec_ctr, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
             elif wband == 'nuv':

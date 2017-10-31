@@ -552,7 +552,7 @@ def counts2jy(norm_mag, calibration_value, pix_as):
     return val
 
 
-def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, write_info=True, model_bg=False, weight_images=False, desired_pix_scale=GALEX_PIX_AS):
+def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, write_info=True, model_bg=False, weight_ims=False, convert_mjysr=False, desired_pix_scale=GALEX_PIX_AS):
     """
     Create cutouts of a galaxy in a single GALEX band.
 
@@ -636,14 +636,15 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
            
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
-            converted_dir = os.path.join(gal_dir, 'converted')
-            os.makedirs(converted_dir)
-            convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
-            im_dir, wt_dir = converted_dir, converted_dir
+            if convert_mjysr:
+                converted_dir = os.path.join(gal_dir, 'converted')
+                os.makedirs(converted_dir)
+                convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, GALEX_PIX_AS)
+                im_dir, wt_dir = converted_dir, converted_dir
 
 
-            # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
-            gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
+                # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
+                gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
             
 
             # MASK IMAGES
@@ -685,7 +686,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # WEIGHT IMAGES
-            if weight_images:
+            if weight_ims:
                 weight_dir = os.path.join(gal_dir, 'weighted')
                 im_weight_dir = os.path.join(weight_dir, 'int')
                 wt_weight_dir = os.path.join(weight_dir, 'rrhr')
@@ -811,6 +812,7 @@ def get_input(index, ind, data_dir, input_dir):
     #    os.symlink(flgfile, new_flg_file)
 
     imfiles = [os.path.basename(infile) for infile in infiles]
+    gal_hdr.append2hdr(keyword='INFILES', value=imfiles, ext=False)
 
     return len(infiles)
 
