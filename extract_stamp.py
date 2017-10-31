@@ -627,7 +627,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # GATHER THE INPUT FILES
             input_dir = os.path.join(gal_dir, 'input')
             os.makedirs(input_dir)
-            nfiles = get_input(index, ind, data_dir, input_dir)
+            nfiles = get_input(index, ind, data_dir, input_dir, hdr=gal_hdr)
             im_dir, wt_dir = input_dir, input_dir
 
             # MAKE EXTENDED HEADER FOR REPROJECTING USING MONTAGE COMMANDS
@@ -769,7 +769,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
     return
 
 
-def get_input(index, ind, data_dir, input_dir):
+def get_input(index, ind, data_dir, input_dir, hdr=None):
     """
     Gather the input files for creating mosaics and copy them into a temporary directory
 
@@ -811,8 +811,9 @@ def get_input(index, ind, data_dir, input_dir):
     #    new_flg_file = os.path.join(input_dir, basename)
     #    os.symlink(flgfile, new_flg_file)
 
-    imfiles = [os.path.basename(infile) for infile in infiles]
-    gal_hdr.append2hdr(keyword='INFILES', value=imfiles, ext=False)
+    if hdr is not None:
+        imfiles = [os.path.basename(infile) for infile in infiles]
+        hdr.append2hdr(keyword='INFILES', value=imfiles, ext=False)
 
     return len(infiles)
 
