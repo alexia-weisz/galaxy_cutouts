@@ -707,9 +707,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             for outdir in [penultimate_dir, final_dir]:
                 os.makedirs(outdir)
             
-            coadd(gal_hdr.hdrfile, penultimate_dir, wt_dir, output='weights', add_type='mean')
             coadd(gal_hdr.hdrfile, penultimate_dir, im_dir, output='int', add_type='mean')
-           
+            coadd(gal_hdr.hdrfile, penultimate_dir, wt_dir, output='weights', add_type='mean')
+
 
             # DIVIDE OUT THE WEIGHTS
             imagefile = finish_weight(penultimate_dir)
@@ -759,7 +759,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             me = sys.exc_info()[0]
             with open(problem_file, 'a') as myfile:
                 myfile.write(name + ': ' + str(me) + ': '+str(inst)+'\n')
-            shutil.rmtree(gal_dir, ignore_errors=True)
+            #shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
 
