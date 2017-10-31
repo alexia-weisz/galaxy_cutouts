@@ -801,7 +801,7 @@ def get_input(index, ind, data_dir, input_dir, hdr=None):
         new_in_file = os.path.join(input_dir, basename)
         os.symlink(infile, new_in_file)
         if hdr is not None:
-            keyw = 'INFILE{:i}'.format(str(i+1).zfill(2))
+            keyw = 'INFILE{}'.format(str(i+1).zfill(2))
             hdr.append2hdr(keyword=keyw, value=basename, ext=False)
 
     for wtfile in wtfiles:
