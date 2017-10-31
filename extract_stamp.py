@@ -552,7 +552,7 @@ def counts2jy(norm_mag, calibration_value, pix_as):
     return val
 
 
-def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, write_info=True, model_bg=False, desired_pix_scale=1.5):
+def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, write_info=True, model_bg=False, weight_images=False, desired_pix_scale=GALEX_PIX_AS):
     """
     Create cutouts of a galaxy in a single GALEX band.
 
@@ -685,15 +685,16 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # WEIGHT IMAGES
-            weight_dir = os.path.join(gal_dir, 'weighted')
-            im_weight_dir = os.path.join(weight_dir, 'int')
-            wt_weight_dir = os.path.join(weight_dir, 'rrhr')
-            for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
-                os.makedirs(outdir)
+            if weight_images:
+                weight_dir = os.path.join(gal_dir, 'weighted')
+                im_weight_dir = os.path.join(weight_dir, 'int')
+                wt_weight_dir = os.path.join(weight_dir, 'rrhr')
+                for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
+                    os.makedirs(outdir)
 
-            weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
-            im_dir = im_weight_dir
-            wt_dir = wt_weight_dir
+                weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
+                im_dir = im_weight_dir
+                wt_dir = wt_weight_dir
 
 
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
