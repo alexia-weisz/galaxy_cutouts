@@ -16,7 +16,10 @@ _GALDATA_DIR = '/n/home00/lewis.1590/research/galbase/gal_data/'
 def get_args():
     """ Get command line arguments """
     parser = argparse.ArgumentParser(description='Create cutouts of a given size around each galaxy center.')
+    parser.add_argument('--imtype', default='int', help='input images to use. Default: int')
+    parser.add_argument('--wttype', default='rrhr', help='images to use for the weighting. Default: rrhr')
     parser.add_argument('--size', default=30, help='cutout size in arcminutes. Default: 30.')
+    parser.add_argument('--desired_pix_scale', default=1.5, help='desired pixel scale of output image. Default: 1.5 (GALEX)')
     parser.add_argument('--band', default=None, help='waveband. Default: None (does all)')
     parser.add_argument('--cutout', action='store_true')
     parser.add_argument('--model_bg', action='store_true', help='model the background to match all images as best as possible.')
@@ -34,8 +37,14 @@ def main(**kwargs):
     
     Parameters
     ----------
+    imtype : str
+        input image type to use from galex (Default: int)
+    wttype : str
+        input weights image type to use from galex (Default: rrhr)
     size : float
         cutout size in arcminutes (Default: 30.0)
+    desired_pix_scale : float
+        Desired pixel scale of output image. Default is currently set to GALEX pixel scale (Default: 1.5)
     band : str
         the band in which the cutout is made, either a single band or a list (Default: fuv)
     cutout : bool
@@ -89,7 +98,8 @@ def main(**kwargs):
             ra_ctr, dec_ctr = gals['ra_deg'], gals['dec_deg']
 
             stamp_kwargs = {'ra_ctr': ra_ctr, 'dec_ctr': dec_ctr, 'size_deg': size_deg, 'name': galname, 'model_bg': kwargs['model_bg'], 
-                            'weight_ims': kwargs['weight_ims'], 'convert_mjysr': kwargs['convert_mjysr']}
+                            'weight_ims': kwargs['weight_ims'], 'convert_mjysr': kwargs['convert_mjysr'], 'imtype': kwargs['imtype'], 
+                            'wttype': kwargs['wttype'], 'desired_pix_scale': kwargs['desired_pix_scale']}
             if wband == 'fuv':
                 extract_stamp.galex(band='fuv', **stamp_kwargs)#ra_ctr=ra_ctr, dec_ctr=dec_ctr, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
             elif wband == 'nuv':
