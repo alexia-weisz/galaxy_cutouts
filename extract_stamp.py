@@ -712,7 +712,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # DIVIDE OUT THE WEIGHTS
-            imagefile = finish_weight(penultimate_dir)
+            imagefile, wtfile = finish_weight(penultimate_dir)
 
 
             # SUBTRACT OUT THE BACKGROUND
@@ -722,6 +722,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             else:
                 outfile = os.path.join(final_dir, 'final_mosaic.fits')
                 shutil.copy(imagefile, outfile)
+
+            # copy weights mosaic to final directory
+            shutil.copy(wtfile, os.path.join(final_dir, 'weights_mosaic.fits'))
 
 
             # COPY MOSAIC FILES TO CUTOUTS DIRECTORY
@@ -1064,7 +1067,7 @@ def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header,
                     proj_dir=reprojected_dir)
 
 
-def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir):
+def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imsuff='-int', wtsuff='-rrhr'):
     """
     Weight the input images by a set of weights images
 
@@ -1199,7 +1202,7 @@ def finish_weight(output_dir):
     newfile = os.path.join(output_dir, 'image_mosaic.fits')
     astropy.io.fits.writeto(newfile, newim, hdr)
 
-    return newfile
+    return newfile, wt_file
 
 
 def remove_background(final_dir, imfile, bgfile):
