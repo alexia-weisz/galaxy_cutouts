@@ -20,9 +20,6 @@ def get_args():
     parser.add_argument('--band', default=None, help='waveband. Default: None (does all)')
     parser.add_argument('--cutout', action='store_true')
     parser.add_argument('--model_bg', action='store_true', help='model the background to match all images as best as possible.')
-    parser.add_argument('--copy', action='store_true')
-    parser.add_argument('--convolve', action='store_true')
-    parser.add_argument('--align', action='store_true')
     parser.add_argument('--galaxy_list', default=None, help='Galaxy name if doing a single cutout or list of names. Default: None')
     parser.add_argument('--all_galaxies', action='store_true', help='run all galaxies in database. Default: False; include flag to store_true')
     parser.add_argument('--tag', default=None, help='tag to select galaxies, i.e., SINGS, HERACLES, etc. Default: None')
@@ -43,9 +40,6 @@ def main(**kwargs):
         create a cutout
     model_bg : bool
         model the background in Montage
-    copy_image : bool
-    convolve : bool
-    align : bool
     galaxy_list : list
         list of one or more galaxies for which to make cutouts. Do not set if you want to make cutouts for all galaxies (Default: None)
     all_galaxies : bool
@@ -67,6 +61,7 @@ def main(**kwargs):
 
     import make_cutouts
     make_cutouts.main(size=30, band='fuv', cutout=True, model_bg=True, tag='SINGS')"""
+
     if kwargs['cutout']:
         warnings.filterwarnings('ignore')
         wband = kwargs['band']
@@ -81,25 +76,20 @@ def main(**kwargs):
         size_deg = kwargs['size'] * 60. / 3600. #convert from arcminutes to degrees
 
         for i in range(n_gals):
-            this_gal = np.rec.fromarrays(gals[i], names=list(config.COLUMNS))
-            galname = str(this_gal.name).replace(' ', '').upper()
+            #this_gal = np.rec.fromarrays(gals[i], names=list(config.COLUMNS))
+            #galname = str(this_gal.name).replace(' ', '').upper()
 
+            galname = gals['name'][0].replace(' ', '').upper()
+            ra_ctr, dec_ctr = gals['ra_deg'], gals['dec_deg']
+
+            stamp_kwargs = {'ra_ctr': ra_ctr, 'dec_ctr': dec_ctr, 'size_deg': size_deg, 'name': galname, 'model_bg': kwargs['model_bg']}
             if wband == 'fuv':
-                extract_stamp.galex(band='fuv', ra_ctr=this_gal.ra_deg, dec_ctr=this_gal.dec_deg, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
+                extract_stamp.galex(band='fuv', **stamp_kwargs)#ra_ctr=ra_ctr, dec_ctr=dec_ctr, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
             elif wband == 'nuv':
-                extract_stamp.galex(band='nuv', ra_ctr=this_gal.ra_deg, dec_ctr=this_gal.dec_deg, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
+                extract_stamp.galex(band='nuv', **stamp_kwargs)#ra_ctr=ra_ctr, dec_ctr=dec_ctr, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
             else:
-                extract_stamp.galex(band='fuv', ra_ctr=this_gal.ra_deg, dec_ctr=this_gal.dec_deg, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
-                extract_stamp.galex(band='nuv', ra_ctr=this_gal.ra_deg, dec_ctr=this_gal.dec_deg, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
-
-    if kwargs['copy']:
-        pass
-
-    if kwargs['convolve']:
-        pass
-
-    if kwargs['align']:
-        pass
+                extract_stamp.galex(band='fuv', **stamp_kwargs)#ra_ctr=ra_ctr, dec_ctr=dec_ctr, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
+                extract_stamp.galex(band='nuv', **stamp_kwargs)#ra_ctr=ra_ctr, dec_ctr=dec_ctr, size_deg=size_deg, name=galname, model_bg=kwargs['model_bg'])
 
 
 
