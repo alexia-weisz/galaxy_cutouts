@@ -796,12 +796,13 @@ def get_input(index, ind, data_dir, input_dir, hdr=None):
     wtfiles = [os.path.join(data_dir, f) for f in wtfiles]
     #flgfiles = [os.path.join(data_dir, f) for f in flgfiles]
 
-    for infile in infiles:
+    for i, infile in enumerate(infiles):
         basename = os.path.basename(infile)
         new_in_file = os.path.join(input_dir, basename)
         os.symlink(infile, new_in_file)
         if hdr is not None:
-            hdr.append2hdr(keyword='INFILE', value=basename, ext=False)
+            keyw = 'INFILE{:i}'.format((i+1).zfill(2))
+            hdr.append2hdr(keyword=keyw, value=basename, ext=False)
 
     for wtfile in wtfiles:
         basename = os.path.basename(wtfile)
