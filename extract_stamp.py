@@ -552,7 +552,7 @@ def counts2jy(norm_mag, calibration_value, pix_as):
     return val
 
 
-def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, write_info=True, model_bg=False, weight_ims=False, convert_mjysr=False, desired_pix_scale=GALEX_PIX_AS):
+def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, write_info=True, model_bg=False, weight_ims=False, convert_mjysr=False, desired_pix_scale=GALEX_PIX_AS, imtype='int', wttype='rrhr'):
     """
     Create cutouts of a galaxy in a single GALEX band.
 
@@ -649,25 +649,25 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # MASK IMAGES
             masked_dir = os.path.join(gal_dir, 'masked')
-            im_masked_dir = os.path.join(masked_dir, 'int')
-            wt_masked_dir = os.path.join(masked_dir, 'rrhr')
+            im_masked_dir = os.path.join(masked_dir, imtype)
+            wt_masked_dir = os.path.join(masked_dir, wttype)
             for outdir in [masked_dir, im_masked_dir, wt_masked_dir]:
                 os.makedirs(outdir)
 
-            mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir)
+            mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype=imtype, wttype=wttype)
             im_dir = im_masked_dir
             wt_dir = wt_masked_dir
 
 
             # REPROJECT IMAGES WITH EXTENDED HEADER
             reprojected_dir = os.path.join(gal_dir, 'reprojected')
-            reproj_im_dir = os.path.join(reprojected_dir, 'int')
-            reproj_wt_dir = os.path.join(reprojected_dir, 'rrhr')
+            reproj_im_dir = os.path.join(reprojected_dir, imtype)
+            reproj_wt_dir = os.path.join(reprojected_dir, wttype)
             for outdir in [reprojected_dir, reproj_im_dir, reproj_wt_dir]:
                 os.makedirs(outdir)
 
-            reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_im_dir, 'int')
-            reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, 'rrhr')
+            reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_im_dir, imtype)
+            reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_wt_dir, wttype)
             im_dir = reproj_im_dir
             wt_dir = reproj_wt_dir
 
@@ -679,21 +679,19 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 corr_dir = os.path.join(bg_model_dir, 'corrected')
                 for outdir in [bg_model_dir, diff_dir, corr_dir]:
                     os.makedirs(outdir)
-                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='int', level_only=False)
-                #bg_model(wt_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type='rrhr', level_only=False)
+                bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type=imtype, level_only=False)
                 im_dir = os.path.join(corr_dir, 'int')
-                #wt_dir = os.path.join(corr_dir, 'rrhr')
 
 
             # WEIGHT IMAGES
             if weight_ims:
                 weight_dir = os.path.join(gal_dir, 'weighted')
-                im_weight_dir = os.path.join(weight_dir, 'int')
-                wt_weight_dir = os.path.join(weight_dir, 'rrhr')
+                im_weight_dir = os.path.join(weight_dir, imtype)
+                wt_weight_dir = os.path.join(weight_dir, wttype)
                 for outdir in [weight_dir, im_weight_dir, wt_weight_dir]:
                     os.makedirs(outdir)
 
-                weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir)
+                weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imtype=imtype, wttype=wttype)
                 im_dir = im_weight_dir
                 wt_dir = wt_weight_dir
 
@@ -842,7 +840,6 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
     intfiles = sorted(glob.glob(os.path.join(im_dir, '*-int.fits')))
     wtfiles = sorted(glob.glob(os.path.join(wt_dir, '*-rrhr.fits')))
 
-    #int_outfiles = [os.path.join(converted_dir, os.path.basename(f).replace('.fits', '_mjysr.fits')) for f in intfiles]
     int_outfiles = [os.path.join(converted_dir, os.path.basename(f)) for f in intfiles]
     wt_outfiles = [os.path.join(converted_dir, os.path.basename(f)) for f in wtfiles]
 
@@ -856,7 +853,6 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
             if band.lower() == 'nuv':
                 im = counts2jy_galex(im, nuv_toab, pix_as)
             if not os.path.exists(int_outfiles[i]):
-                #im -= np.mean(im)  # subtract out the mean of each image
                 astropy.io.fits.writeto(int_outfiles[i], im, hdr)
             if not os.path.exists(wt_outfiles[i]):
                 astropy.io.fits.writeto(wt_outfiles[i], wt, whdr)
@@ -894,7 +890,7 @@ def counts2jy_galex(counts, cal, pix_as):
     # then to MJy/sr
     val = f_nu / (np.radians(pix_as/3600.))**2
     return val
-    #val = flux / MJYSR2JYARCSEC / pixel_area / 1e-23 / C * FUV_LAMBDA**2
+
 
 
 def wtpersr(wt, pix_as):
@@ -904,7 +900,7 @@ def wtpersr(wt, pix_as):
     return wt / (np.radians(pix_as/3600.))**2
 
 
-def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir):
+def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype='int', wttype='rrhr'):
     """
     Mask pixels in the input images
 
@@ -920,7 +916,7 @@ def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir):
         Path to temp directory for this galaxy in which to store masked weight files
     """
     #int_suff, rrhr_suff = '*_mjysr.fits', '*-rrhr.fits'
-    int_suff, rrhr_suff = '*-int.fits', '*-rrhr.fits'
+    int_suff, rrhr_suff = '*-{}.fits'.format(imtype), '*-{}.fits'.format(wttype)
     int_images = sorted(glob.glob(os.path.join(im_dir, int_suff)))
     rrhr_images = sorted(glob.glob(os.path.join(wt_dir, rrhr_suff)))
 
@@ -1072,7 +1068,7 @@ def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header,
                     proj_dir=reprojected_dir)
 
 
-def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imsuff='-int', wtsuff='-rrhr'):
+def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imtype='-int', wttype='-rrhr'):
     """
     Weight the input images by a set of weights images
 
@@ -1090,28 +1086,23 @@ def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imsu
         Path to subdirectory containgn the weights images (same as before, they haven't changed)    
     """
     #im_suff, wt_suff = '*_mjysr.fits', '*-rrhr.fits'
-    im_suff, wt_suff = '*-int.fits', '*-rrhr.fits'
+    im_suff, wt_suff = '*-{}.fits'.format(imtype), '*-{}.fits'.format(wttype)
     imfiles = sorted(glob.glob(os.path.join(im_dir, im_suff)))
     wtfiles = sorted(glob.glob(os.path.join(wt_dir, wt_suff)))    
-    #set_trace()
+
     # weight each image
     for i in range(len(imfiles)):
         # read in the data
         imfile = imfiles[i]
-        #wtfile = wtfiles[i]
         wtfile = os.path.join(os.path.dirname(wtfiles[i]), os.path.basename(imfile).replace('-int', '-rrhr'))
         im, hdr = astropy.io.fits.getdata(imfile, header=True)
         rrhr, rrhrhdr = astropy.io.fits.getdata(wtfile, header=True)
 
         # weight the data by the exposure time
-        # noise = 1. / np.sqrt(rrhr)
-        # weight = 1 / noise**2
         wt = rrhr
         newim = im * wt
 
         # write data to new files and copy the *_area.fits files created by Montage to have the same naming convention
-        #nf = imfiles[i].split('/')[-1].replace('.fits', '_weighted.fits')
-        #newfile = os.path.join(weighted_dir, nf)
         newfile = os.path.join(im_weight_dir, os.path.basename(imfile))
         astropy.io.fits.writeto(newfile, newim, hdr)
         old_area_file = imfile.replace('.fits', '_area.fits')
@@ -1119,8 +1110,6 @@ def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imsu
             new_area_file = newfile.replace('.fits', '_area.fits')
             shutil.copy(old_area_file, new_area_file)
 
-        #nf = wtfiles[i].split('/')[-1].replace('.fits', '_weights.fits')
-        #weightfile = os.path.join(weights_dir, nf)
         weightfile = os.path.join(wt_weight_dir, os.path.basename(wtfile))
         astropy.io.fits.writeto(weightfile, wt, rrhrhdr)
         old_area_file = wtfile.replace('.fits', '_area.fits')
@@ -1197,11 +1186,9 @@ def finish_weight(output_dir):
     """
     image_file = os.path.join(output_dir, 'int_mosaic.fits')
     wt_file = os.path.join(output_dir, 'weights_mosaic.fits')
-    #count_file = os.path.join(output_dir, 'count_mosaic.fits')
+    
     im, hdr = astropy.io.fits.getdata(image_file, header=True)
     wt = astropy.io.fits.getdata(wt_file)
-    #ct = astropy.io.fits.getdata(count_file)
-
     newim = im / wt
 
     newfile = os.path.join(output_dir, 'image_mosaic.fits')
