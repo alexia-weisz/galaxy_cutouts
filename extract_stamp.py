@@ -698,8 +698,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
-            #weight_table = create_table(wt_dir, dir_type='weights')
-            #weighted_table = create_table(im_dir, dir_type='int')
+            weight_table = create_table(wt_dir, dir_type='weights')
+            weighted_table = create_table(im_dir, dir_type='int')
 
 
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
