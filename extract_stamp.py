@@ -1085,12 +1085,13 @@ def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir):
     im_suff, wt_suff = '*-int.fits', '*-rrhr.fits'
     imfiles = sorted(glob.glob(os.path.join(im_dir, im_suff)))
     wtfiles = sorted(glob.glob(os.path.join(wt_dir, wt_suff)))    
-
+    #set_trace()
     # weight each image
     for i in range(len(imfiles)):
         # read in the data
         imfile = imfiles[i]
-        wtfile = wtfiles[i]
+        #wtfile = wtfiles[i]
+        wtfile = os.path.join(os.path.dirname(wtfiles[i]), os.path.basename(imfile).replace('-int', '-rrhr'))
         im, hdr = astropy.io.fits.getdata(imfile, header=True)
         rrhr, rrhrhdr = astropy.io.fits.getdata(wtfile, header=True)
 
