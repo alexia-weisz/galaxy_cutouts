@@ -697,8 +697,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
-            weight_table = create_table(wt_dir, dir_type='weights')
-            weighted_table = create_table(im_dir, dir_type='int')
+            #weight_table = create_table(wt_dir, dir_type='weights')
+            #weighted_table = create_table(im_dir, dir_type='int')
 
 
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
@@ -762,7 +762,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             me = sys.exc_info()[0]
             with open(problem_file, 'a') as myfile:
                 myfile.write(name + ': ' + str(me) + ': '+str(inst)+'\n')
-            #shutil.rmtree(gal_dir, ignore_errors=True)
+            shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
 
@@ -789,10 +789,10 @@ def get_input(index, ind, data_dir, input_dir):
     """
     infiles = index[ind[0]]['fname']
     wtfiles = index[ind[0]]['rrhrfile']
-    flgfiles = index[ind[0]]['flagfile']
+    #flgfiles = index[ind[0]]['flagfile']
     infiles = [os.path.join(data_dir, f) for f in infiles]
     wtfiles = [os.path.join(data_dir, f) for f in wtfiles]
-    flgfiles = [os.path.join(data_dir, f) for f in flgfiles]
+    #flgfiles = [os.path.join(data_dir, f) for f in flgfiles]
 
     for infile in infiles:
         basename = os.path.basename(infile)
@@ -804,10 +804,12 @@ def get_input(index, ind, data_dir, input_dir):
         new_wt_file = os.path.join(input_dir, basename)
         os.symlink(wtfile, new_wt_file)
 
-    for flgfile in flgfiles:
-        basename = os.path.basename(flgfile)
-        new_flg_file = os.path.join(input_dir, basename)
-        os.symlink(flgfile, new_flg_file)
+    #for flgfile in flgfiles:
+    #    basename = os.path.basename(flgfile)
+    #    new_flg_file = os.path.join(input_dir, basename)
+    #    os.symlink(flgfile, new_flg_file)
+
+    imfiles = [os.path.basename(infile) for infile in infiles]
 
     return len(infiles)
 
