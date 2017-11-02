@@ -782,8 +782,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 def get_final_header_from_wise(pgc, hdr, gal_dir):
     wisefile = os.path.join(_WISE_DIR, '{}_w1_mjysr.fits'.format(pgc))
-    temp_wise_hdr = os.path.join
-    montage.mGetHdr(wisefile, gal_dir, '{}_w1.hdr'.format(pgc))
+    temp_wise_hdr = os.path.join(gal_dir, '{}_w1.hdr'.format(pgc))
+    montage.mGetHdr(wisefile, temp_wise_hdr)
     set_trace()
 
 
