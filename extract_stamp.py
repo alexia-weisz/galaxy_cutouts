@@ -15,6 +15,7 @@ from pdb import set_trace
 
 _TOP_DIR = '/data/tycho/0/leroy.42/allsky/'
 _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
+_WISE_DIR = os.path.join(_TOP_DIR, 'unwise', 'atlas')
 _WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
 _MOSAIC_DIR = os.path.join(_WORK_DIR, 'cutouts')
 
@@ -552,7 +553,7 @@ def counts2jy(norm_mag, calibration_value, pix_as):
     return val
 
 
-def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, write_info=True, model_bg=False, weight_ims=False, convert_mjysr=False, desired_pix_scale=GALEX_PIX_AS, imtype='int', wttype='rrhr'):
+def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, pgcname=None, write_info=True, model_bg=False, weight_ims=False, convert_mjysr=False, desired_pix_scale=GALEX_PIX_AS, imtype='int', wttype='rrhr'):
     """
     Create cutouts of a galaxy in a single GALEX band.
 
@@ -633,6 +634,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
             gal_hdr = GalaxyHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
 
+            # GET HEADER FROM WISE IMAGES
+            final_header = get_final_header_fron_wise(pgcname, gal_hdr)
 
             # GATHER THE INPUT FILES
             input_dir = os.path.join(gal_dir, 'input')
@@ -775,6 +778,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
+
+
+def get_wise_header(pgc, hdr):
+    wisefile = os.path.join(_WISE_DIR, '{}_w1_mjysr.fits'.format(pgc))
+    temp_wise_hdr = os.path.join
+    montage.mGetHdr(wisefile, gal_dir, '{}_w1.hdr'.format(pgc))
+    set_trace()
 
 
 def get_input(index, ind, data_dir, input_dir, hdr=None):
