@@ -635,7 +635,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             gal_hdr = GalaxyHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
 
             # GET HEADER FROM WISE IMAGES
-            final_header = get_final_header_fron_wise(pgcname, gal_hdr)
+            final_header = get_final_header_from_wise(pgcname, gal_hdr)
 
             # GATHER THE INPUT FILES
             input_dir = os.path.join(gal_dir, 'input')
@@ -780,7 +780,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
     return
 
 
-def get_wise_header(pgc, hdr):
+def get_final_header_from_wise(pgc, hdr):
     wisefile = os.path.join(_WISE_DIR, '{}_w1_mjysr.fits'.format(pgc))
     temp_wise_hdr = os.path.join
     montage.mGetHdr(wisefile, gal_dir, '{}_w1.hdr'.format(pgc))
