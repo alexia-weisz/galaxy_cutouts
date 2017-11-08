@@ -18,9 +18,9 @@ def get_args():
     parser.add_argument('--size', default=30, help='cutout size in arcminutes. Default: 30.')
     parser.add_argument('--desired_pix_scale', default=1.5, help='desired pixel scale of output image. Default: 1.5 (GALEX)')
     parser.add_argument('--band', default=None, help='waveband. Default: None (does all)')
-    parser.add_argument('--cutout', action='store_true')
-    parser.add_argument('--model_bg', action='store_true', help='model the background to match all images as best as possible.')
-    parser.add_argument('--weight_ims', action='store_true', help='weight the input images by the desired weight images')
+    parser.add_argument('--cutout', default=True, help='make an image cutout of the galaxy')
+    parser.add_argument('--model_bg', default=True, help='model the background to match all images as best as possible.')
+    parser.add_argument('--weight_ims', default=True, help='weight the input images by the desired weight images')
     parser.add_argument('--convert_mjysr', action='store_true', help='convert images to MJy/sr.')
     parser.add_argument('--galaxy_list', default=None, help='Galaxy name if doing a single cutout or list of names. Default: None')
     parser.add_argument('--all_galaxies', action='store_true', help='run all galaxies in database. Default: False; include flag to store_true')
@@ -100,7 +100,7 @@ def main(**kwargs):
                             'pgcname': pgcname, 'model_bg': kwargs['model_bg'], 
                             'weight_ims': kwargs['weight_ims'], 'convert_mjysr': kwargs['convert_mjysr'], 
                             'imtype': kwargs['imtype'], 'wttype': kwargs['wttype'], 
-                            'desired_pix_scale': kwargs['desired_pix_scale']}
+                            'desired_pix_scale': kwargs['desiredd_pix_scale']}
             if wband == 'fuv':
                 extract_stamp.galex(band='fuv', **stamp_kwargs)
             elif wband == 'nuv':
