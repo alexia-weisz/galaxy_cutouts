@@ -324,238 +324,6 @@ def calc_tile_overlap(ra_ctr, dec_ctr, pad=0.0, min_ra=0., max_ra=180., min_dec=
     return overlap
 
 
-def make_axes(hdr, quiet=False, novec=False, vonly=False, simple=False):
-    """
-    Create axes arrays for the new mosaiced image. This is a simple translation to Python of Adam's
-    IDL routine of the same name.
-
-    Parameters
-    ----------
-    hdr : FITS header object
-        FITS header to hold astrometry of desired output image
-    quiet : bool, optional
-        NOT USED
-    novec : bool
-        Find RA and Dec for every point (Default: False)
-    vonly : bool
-        Return only velocity data (Default: False)
-    simple : bool
-        Do the simplest thing (Default: False)
-
-    Returns
-    -------
-    rimg : array
-        array for ouptut RA
-    dimg : array
-        array for output Dec
-    """
-
-    # PULL THE IMAGE/CUBE SIZES FROM THE HEADER
-    naxis  = int(hdr['NAXIS'])
-    naxis1 = int(hdr['NAXIS1'])
-    naxis2 = int(hdr['NAXIS2'])
-    if naxis > 2:
-        naxis3 = hdr['NAXIS3']
-
-    ## EXTRACT FITS ASTROMETRY STRUCTURE
-    ww = astropy.wcs.WCS(hdr)
-
-    #IF DATASET IS A CUBE THEN WE MAKE THE THIRD AXIS IN THE SIMPLEST WAY POSSIBLE (NO COMPLICATED ASTROMETRY WORRIES FOR FREQUENCY INFORMATION)
-    if naxis > 3:
-        #GRAB THE RELEVANT INFORMATION FROM THE ASTROMETRY HEADER
-        cd = ww.wcs.cd
-        crpix = ww.wcs.crpix
-        cdelt = ww.wcs.crelt
-        crval = ww.wcs.crval
-
-    if naxis > 2:
-    # MAKE THE VELOCITY AXIS (WILL BE M/S)
-        v = np.arange(naxis3) * 1.0
-        vdif = v - (hdr['CRPIX3']-1)
-        vaxis = (vdif * hdr['CDELT3'] + hdr['CRVAL3'])
-
-    # CUT OUT HERE IF WE ONLY WANT VELOCITY INFO
-    if vonly:
-        return vaxis
-
-    #IF 'SIMPLE' IS CALLED THEN DO THE REALLY TRIVIAL THING:
-    if simple:
-        print('Using simple aproach to make axes.')
-        print('BE SURE THIS IS WHAT YOU WANT! It probably is not.')
-        raxis = np.arange(naxis1) * 1.0
-        rdif = raxis - (hdr['CRPIX1'] - 1)
-        raxis = (rdif * hdr['CDELT1'] + hdr['CRVAL1'])
-
-        daxis = np.arange(naxis2) * 1.0
-        ddif = daxis - (hdr['CRPIX1'] - 1)
-        daxis = (ddif * hdr['CDELT1'] + hdr['CRVAL1'])
-
-        rimg = raxis # (fltarr(naxis2) + 1.)
-        dimg = (np.asarray(naxis1) + 1.) # daxis
-        return rimg, dimg
-
-    # OBNOXIOUS SFL/GLS THING
-    glspos = ww.wcs.ctype[0].find('GLS')
-    if glspos != -1:
-        ctstr = ww.wcs.ctype[0]
-        newtype = 'SFL'
-        ctstr.replace('GLS', 'SFL')
-        ww.wcs.ctype[0] = ctstr
-        print('Replaced GLS with SFL; CTYPE1 now =' + ww.wcs.ctype[0])
-
-    glspos = ww.wcs.ctype[1].find('GLS')
-    if glspos != -1:
-        ctstr = ww.wcs.ctype[1]
-        newtype = 'SFL'
-        ctstr.replace('GLS', 'SFL')
-        ww.wcs.ctype[1] = ctstr
-        print('Replaced GLS with SFL; CTYPE2 now = ' + ww.wcs.ctype[1])
-
-    # CALL 'xy2ad' TO FIND THE RA AND DEC FOR EVERY POINT IN THE IMAGE
-    if novec:
-        rimg = np.zeros((naxis1, naxis2))
-        dimg = np.zeros((naxis1, naxis2))
-        for i in range(naxis1):
-            j = np.asarray([0 for i in xrange(naxis2)])
-
-            pixcrd = np.array([[zip(float(i), float(j))]], numpy.float_)
-            ra, dec = ww.all_pix2world(pixcrd, 1)
-
-            rimg[i, :] = ra
-            dimg[i, :] = dec
-    else:
-        ximg = np.arange(naxis1) * 1.0
-        yimg = np.arange(naxis1) * 1.0
-        X, Y = np.meshgrid(ximg, yimg, indexing='xy')
-        ss = X.shape
-        xx, yy = X.flatten(), Y.flatten()
-
-        pixcrd = np.array(zip(xx, yy), np.float_)
-        img_new = ww.all_pix2world(pixcrd, 0)
-        rimg_new, dimg_new = img_new[:,0], img_new[:,1]
-
-        rimg = rimg_new.reshape(ss)
-        dimg = dimg_new.reshape(ss)
-
-    # GET AXES FROM THE IMAGES. USE THE CENTRAL COLUMN AND CENTRAL ROW
-    raxis = np.squeeze(rimg[:, naxis2/2])
-    daxis = np.squeeze(dimg[naxis1/2, :])
-
-    return rimg, dimg
-
-
-def unwise(band=None, ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None):
-    tel = 'unwise'
-    data_dir = os.path.join(_TOP_DIR, tel, 'sorted_tiles')
-
-    # READ THE INDEX FILE (IF NOT PASSED IN)
-    if index is None:
-        indexfile = os.path.join(_INDEX_DIR, tel + '_index_file.fits')
-        ext = 1
-        index, hdr = astropy.io.fits.getdata(indexfile, ext, header=True)
-
-    # CALIBRATION TO GO FROM VEGAS TO ABMAG
-    w1_vtoab = 2.683
-    w2_vtoab = 3.319
-    w3_vtoab = 5.242
-    w4_vtoab = 6.604
-
-    # NORMALIZATION OF UNITY IN VEGA MAG
-    norm_mag = 22.5
-    pix_as = 2.75  #arcseconds - native detector pixel size wise docs
-
-    # COUNTS TO JY CONVERSION
-    w1_to_mjysr = counts2jy(norm_mag, w1_vtoab, pix_as)
-    w2_to_mjysr = counts2jy(norm_mag, w2_vtoab, pix_as)
-    w3_to_mjysr = counts2jy(norm_mag, w3_vtoab, pix_as)
-    w4_to_mjysr = counts2jy(norm_mag, w4_vtoab, pix_as)
-
-    # MAKE A HEADER
-    pix_scale = 2.0 / 3600.  # 2.0 arbitrary
-    pix_len = size_deg / pix_scale
-
-    # this should automatically populate SIMPLE and NAXIS keywords
-    target_hdr = create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale)
-
-    # CALCULATE TILE OVERLAP
-    tile_overlaps = calc_tile_overlap(ra_ctr, dec_ctr, pad=size_deg,
-                                      min_ra=index['MIN_RA'],
-                                      max_ra=index['MAX_RA'],
-                                      min_dec=index['MIN_DEC'],
-                                      max_dec=index['MAX_DEC'])
-
-    # FIND OVERLAPPING TILES WITH RIGHT BAND
-    #  index file set up such that index['BAND'] = 1, 2, 3, 4 depending on wise band
-    ind = np.where((index['BAND'] == band) & tile_overlaps)
-    ct_overlap = len(ind[0])
-
-    # SET UP THE OUTPUT
-    ri_targ, di_targ = make_axes(target_hdr)
-    sz_out = ri_targ.shape
-    outim = ri_targ * np.nan
-
-    # LOOP OVER OVERLAPPING TILES AND STITCH ONTO TARGET HEADER
-    for ii in range(0, ct_overlap):
-        infile = os.path.join(data_dir, index[ind[ii]]['FNAME'])
-        im, hdr = astropy.io.fits.getdata(infile, header=True)
-        ri, di = make_axes(hdr)
-
-        hh = astropy.wcs.WCS(target_hdr)
-        x, y = ww.all_world2pix(zip(ri, di), 1)
-
-        in_image = (x > 0 & x < (sz_out[0]-1)) & (y > 0 and y < (sz_out[1]-1))
-        if np.sum(in_image) == 0:
-            print("No overlap. Proceeding.")
-            continue
-
-        if band == 1:
-            im *= w1_to_mjysr
-        if band == 2:
-            im *= w2_to_mjysr
-        if band == 3:
-            im *= w3_to_mjysr
-        if band == 4:
-            im *= w4_to_mjysr
-
-        target_hdr['BUNIT'] = 'MJY/SR'
-
-        newimfile = reprojection(infile, im, hdr, target_hdr, data_dir)
-        im, new_hdr = astropy.io.fits.getdata(newimfile, header=True)
-
-        useful = np.where(np.isfinite(im))
-        outim[useful] = im[useful]
-
-        return outim, target_hdr
-
-
-def counts2jy(norm_mag, calibration_value, pix_as):
-    """
-    Convert counts to Jy -- this is from Adam's unwise stuff
-
-    Parameters
-    ----------
-    norm_mag : float
-        input data
-    calibration_value : float
-        Value for converting from counts to mag
-    pix_as : float
-        Pixel scale in arcseconds
-
-    Returns
-    -------
-    val : float
-        Converted data, now in MJy/sr
-    """
-    # convert counts to Jy
-    val = 10.**((norm_mag + calibration_value) / -2.5)
-    val *= 3631.0
-    # then to MJy
-    val /= 1e6
-    # then to MJy/sr
-    val /= np.radians(pix_as / 3600.)**2
-    return val
-
-
 def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, pgcname=None, model_bg=False, weight_ims=False, convert_mjysr=False, desired_pix_scale=GALEX_PIX_AS, imtype='int', wttype='rrhr'):
     """
     Create cutouts of a galaxy in a single GALEX band.
@@ -650,16 +418,17 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
            
 
             # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
-            if convert_mjysr:
-                converted_dir = os.path.join(gal_dir, 'converted')
-                os.makedirs(converted_dir)
-                convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, desired_pix_scale)
-                im_dir, wt_dir = converted_dir, converted_dir
+            # if convert_mjysr:
+            #     converted_dir = os.path.join(gal_dir, 'converted')
+            #     os.makedirs(converted_dir)
+            #     convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, desired_pix_scale)
+            #     im_dir, wt_dir = converted_dir, converted_dir
 
 
-                # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
-                gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
-            
+            #     # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
+            #     gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
+ 
+
 
             # MASK IMAGES
             masked_dir = os.path.join(gal_dir, 'masked')
@@ -726,9 +495,9 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # DIVIDE OUT THE WEIGHTS
-            imagefile, wtfile = finish_weight(penultimate_dir)
+            imagefile, wtfile = finish_weight(penultimate_dir, convert_mjysr=convert_mjysr, band=band, gal_hdr=gal_hdr)
 
-
+            
             # SUBTRACT OUT THE BACKGROUND
             rm_overall_bg = False
             if rm_overall_bg:
@@ -779,12 +548,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
-
-
-#def get_final_header_from_wise(pgc, hdr, gal_dir):
-#    wisefile = os.path.join(_WISE_DIR, '{}_w1_mjysr.fits'.format(pgc))
-#    temp_wise_hdr = os.path.join(gal_dir, '{}_w1.hdr'.format(pgc))
-#    montage.mGetHdr(wisefile, temp_wise_hdr)
 
 
 def get_input(index, ind, data_dir, input_dir, hdr=None):
@@ -1182,7 +945,7 @@ def coadd(template_header, output_dir, input_dir, output=None, add_type=None):
     montage.mAdd(reprojected_table, template_header, out_image, img_dir=img_dir, exact=True, type=add_type)
 
 
-def finish_weight(output_dir):
+def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None):
     """
     Divide out the weights from the final image to get back to flux density units
 
@@ -1202,6 +965,17 @@ def finish_weight(output_dir):
     im, hdr = astropy.io.fits.getdata(image_file, header=True)
     wt = astropy.io.fits.getdata(wt_file)
     newim = im / wt
+
+    # CONVERT TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
+    if convert_mjysr:
+        if band.lower() == 'fuv':
+            newim = counts2jy_galex(newim, fuv_toab, pix_as)
+        if band.lower() == 'nuv':
+            newim = counts2jy_galex(newim, nuv_toab, pix_as)
+
+        # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
+        gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
+ 
 
     newfile = os.path.join(output_dir, 'image_mosaic.fits')
     astropy.io.fits.writeto(newfile, newim, hdr)
@@ -1304,3 +1078,237 @@ def get_bg_sample(data, hdr, box):
     sel = Path(box_coords).contains_points(pixels)
     sample = data.flatten()[sel]
     return sample
+
+
+
+# def make_axes(hdr, quiet=False, novec=False, vonly=False, simple=False):
+#     """
+#     Create axes arrays for the new mosaiced image. This is a simple translation to Python of Adam's
+#     IDL routine of the same name.
+
+#     Parameters
+#     ----------
+#     hdr : FITS header object
+#         FITS header to hold astrometry of desired output image
+#     quiet : bool, optional
+#         NOT USED
+#     novec : bool
+#         Find RA and Dec for every point (Default: False)
+#     vonly : bool
+#         Return only velocity data (Default: False)
+#     simple : bool
+#         Do the simplest thing (Default: False)
+
+#     Returns
+#     -------
+#     rimg : array
+#         array for ouptut RA
+#     dimg : array
+#         array for output Dec
+#     """
+
+#     # PULL THE IMAGE/CUBE SIZES FROM THE HEADER
+#     naxis  = int(hdr['NAXIS'])
+#     naxis1 = int(hdr['NAXIS1'])
+#     naxis2 = int(hdr['NAXIS2'])
+#     if naxis > 2:
+#         naxis3 = hdr['NAXIS3']
+
+#     ## EXTRACT FITS ASTROMETRY STRUCTURE
+#     ww = astropy.wcs.WCS(hdr)
+
+#     #IF DATASET IS A CUBE THEN WE MAKE THE THIRD AXIS IN THE SIMPLEST WAY POSSIBLE (NO COMPLICATED ASTROMETRY WORRIES FOR FREQUENCY INFORMATION)
+#     if naxis > 3:
+#         #GRAB THE RELEVANT INFORMATION FROM THE ASTROMETRY HEADER
+#         cd = ww.wcs.cd
+#         crpix = ww.wcs.crpix
+#         cdelt = ww.wcs.crelt
+#         crval = ww.wcs.crval
+
+#     if naxis > 2:
+#     # MAKE THE VELOCITY AXIS (WILL BE M/S)
+#         v = np.arange(naxis3) * 1.0
+#         vdif = v - (hdr['CRPIX3']-1)
+#         vaxis = (vdif * hdr['CDELT3'] + hdr['CRVAL3'])
+
+#     # CUT OUT HERE IF WE ONLY WANT VELOCITY INFO
+#     if vonly:
+#         return vaxis
+
+#     #IF 'SIMPLE' IS CALLED THEN DO THE REALLY TRIVIAL THING:
+#     if simple:
+#         print('Using simple aproach to make axes.')
+#         print('BE SURE THIS IS WHAT YOU WANT! It probably is not.')
+#         raxis = np.arange(naxis1) * 1.0
+#         rdif = raxis - (hdr['CRPIX1'] - 1)
+#         raxis = (rdif * hdr['CDELT1'] + hdr['CRVAL1'])
+
+#         daxis = np.arange(naxis2) * 1.0
+#         ddif = daxis - (hdr['CRPIX1'] - 1)
+#         daxis = (ddif * hdr['CDELT1'] + hdr['CRVAL1'])
+
+#         rimg = raxis # (fltarr(naxis2) + 1.)
+#         dimg = (np.asarray(naxis1) + 1.) # daxis
+#         return rimg, dimg
+
+#     # OBNOXIOUS SFL/GLS THING
+#     glspos = ww.wcs.ctype[0].find('GLS')
+#     if glspos != -1:
+#         ctstr = ww.wcs.ctype[0]
+#         newtype = 'SFL'
+#         ctstr.replace('GLS', 'SFL')
+#         ww.wcs.ctype[0] = ctstr
+#         print('Replaced GLS with SFL; CTYPE1 now =' + ww.wcs.ctype[0])
+
+#     glspos = ww.wcs.ctype[1].find('GLS')
+#     if glspos != -1:
+#         ctstr = ww.wcs.ctype[1]
+#         newtype = 'SFL'
+#         ctstr.replace('GLS', 'SFL')
+#         ww.wcs.ctype[1] = ctstr
+#         print('Replaced GLS with SFL; CTYPE2 now = ' + ww.wcs.ctype[1])
+
+#     # CALL 'xy2ad' TO FIND THE RA AND DEC FOR EVERY POINT IN THE IMAGE
+#     if novec:
+#         rimg = np.zeros((naxis1, naxis2))
+#         dimg = np.zeros((naxis1, naxis2))
+#         for i in range(naxis1):
+#             j = np.asarray([0 for i in xrange(naxis2)])
+
+#             pixcrd = np.array([[zip(float(i), float(j))]], numpy.float_)
+#             ra, dec = ww.all_pix2world(pixcrd, 1)
+
+#             rimg[i, :] = ra
+#             dimg[i, :] = dec
+#     else:
+#         ximg = np.arange(naxis1) * 1.0
+#         yimg = np.arange(naxis1) * 1.0
+#         X, Y = np.meshgrid(ximg, yimg, indexing='xy')
+#         ss = X.shape
+#         xx, yy = X.flatten(), Y.flatten()
+
+#         pixcrd = np.array(zip(xx, yy), np.float_)
+#         img_new = ww.all_pix2world(pixcrd, 0)
+#         rimg_new, dimg_new = img_new[:,0], img_new[:,1]
+
+#         rimg = rimg_new.reshape(ss)
+#         dimg = dimg_new.reshape(ss)
+
+#     # GET AXES FROM THE IMAGES. USE THE CENTRAL COLUMN AND CENTRAL ROW
+#     raxis = np.squeeze(rimg[:, naxis2/2])
+#     daxis = np.squeeze(dimg[naxis1/2, :])
+
+#     return rimg, dimg
+
+
+# def unwise(band=None, ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None):
+#     tel = 'unwise'
+#     data_dir = os.path.join(_TOP_DIR, tel, 'sorted_tiles')
+
+#     # READ THE INDEX FILE (IF NOT PASSED IN)
+#     if index is None:
+#         indexfile = os.path.join(_INDEX_DIR, tel + '_index_file.fits')
+#         ext = 1
+#         index, hdr = astropy.io.fits.getdata(indexfile, ext, header=True)
+
+#     # CALIBRATION TO GO FROM VEGAS TO ABMAG
+#     w1_vtoab = 2.683
+#     w2_vtoab = 3.319
+#     w3_vtoab = 5.242
+#     w4_vtoab = 6.604
+
+#     # NORMALIZATION OF UNITY IN VEGA MAG
+#     norm_mag = 22.5
+#     pix_as = 2.75  #arcseconds - native detector pixel size wise docs
+
+#     # COUNTS TO JY CONVERSION
+#     w1_to_mjysr = counts2jy(norm_mag, w1_vtoab, pix_as)
+#     w2_to_mjysr = counts2jy(norm_mag, w2_vtoab, pix_as)
+#     w3_to_mjysr = counts2jy(norm_mag, w3_vtoab, pix_as)
+#     w4_to_mjysr = counts2jy(norm_mag, w4_vtoab, pix_as)
+
+#     # MAKE A HEADER
+#     pix_scale = 2.0 / 3600.  # 2.0 arbitrary
+#     pix_len = size_deg / pix_scale
+
+#     # this should automatically populate SIMPLE and NAXIS keywords
+#     target_hdr = create_hdr(ra_ctr, dec_ctr, pix_len, pix_scale)
+
+#     # CALCULATE TILE OVERLAP
+#     tile_overlaps = calc_tile_overlap(ra_ctr, dec_ctr, pad=size_deg,
+#                                       min_ra=index['MIN_RA'],
+#                                       max_ra=index['MAX_RA'],
+#                                       min_dec=index['MIN_DEC'],
+#                                       max_dec=index['MAX_DEC'])
+
+#     # FIND OVERLAPPING TILES WITH RIGHT BAND
+#     #  index file set up such that index['BAND'] = 1, 2, 3, 4 depending on wise band
+#     ind = np.where((index['BAND'] == band) & tile_overlaps)
+#     ct_overlap = len(ind[0])
+
+#     # SET UP THE OUTPUT
+#     ri_targ, di_targ = make_axes(target_hdr)
+#     sz_out = ri_targ.shape
+#     outim = ri_targ * np.nan
+
+#     # LOOP OVER OVERLAPPING TILES AND STITCH ONTO TARGET HEADER
+#     for ii in range(0, ct_overlap):
+#         infile = os.path.join(data_dir, index[ind[ii]]['FNAME'])
+#         im, hdr = astropy.io.fits.getdata(infile, header=True)
+#         ri, di = make_axes(hdr)
+
+#         hh = astropy.wcs.WCS(target_hdr)
+#         x, y = ww.all_world2pix(zip(ri, di), 1)
+
+#         in_image = (x > 0 & x < (sz_out[0]-1)) & (y > 0 and y < (sz_out[1]-1))
+#         if np.sum(in_image) == 0:
+#             print("No overlap. Proceeding.")
+#             continue
+
+#         if band == 1:
+#             im *= w1_to_mjysr
+#         if band == 2:
+#             im *= w2_to_mjysr
+#         if band == 3:
+#             im *= w3_to_mjysr
+#         if band == 4:
+#             im *= w4_to_mjysr
+
+#         target_hdr['BUNIT'] = 'MJY/SR'
+
+#         newimfile = reprojection(infile, im, hdr, target_hdr, data_dir)
+#         im, new_hdr = astropy.io.fits.getdata(newimfile, header=True)
+
+#         useful = np.where(np.isfinite(im))
+#         outim[useful] = im[useful]
+
+#         return outim, target_hdr
+
+
+# def counts2jy(norm_mag, calibration_value, pix_as):
+#     """
+#     Convert counts to Jy -- this is from Adam's unwise stuff
+
+#     Parameters
+#     ----------
+#     norm_mag : float
+#         input data
+#     calibration_value : float
+#         Value for converting from counts to mag
+#     pix_as : float
+#         Pixel scale in arcseconds
+
+#     Returns
+#     -------
+#     val : float
+#         Converted data, now in MJy/sr
+#     """
+#     # convert counts to Jy
+#     val = 10.**((norm_mag + calibration_value) / -2.5)
+#     val *= 3631.0
+#     # then to MJy
+#     val /= 1e6
+#     # then to MJy/sr
+#     val /= np.radians(pix_as / 3600.)**2
+#     return val
+
