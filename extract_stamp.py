@@ -277,9 +277,14 @@ class GalaxyHeader(object):
                 self.hdr[keyword] = value
                 self.write_headerfile(self.hdrfile, self.hdr)
 
+
 def window(data):
+    def local_mean(A):
+        return np.nanmean(A)
+
     mean_window = sp.filters.generic_filter(data, local_mean, size=3)
     return mean_window
+
 
 def calc_tile_overlap(ra_ctr, dec_ctr, pad=0.0, min_ra=0., max_ra=180., min_dec=-90., max_dec=90.):
     """
@@ -499,7 +504,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # DIVIDE OUT THE WEIGHTS
             imagefile, wtfile = finish_weight(penultimate_dir, convert_mjysr=convert_mjysr, band=band, 
-                                              gal_hdr=gal_hdr, pix_as=pix_as)
+                                              gal_hdr=gal_hdr, pix_as=desired_pix_scale)
 
             
             # SUBTRACT OUT THE BACKGROUND
@@ -987,7 +992,9 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
     return newfile, wt_file
 
 
+# ------------------ #
 ## UNUSED functions ##
+# ------------------ #
 def remove_background(final_dir, imfile, bgfile):
     """
     Remove a background from the mosaiced image
