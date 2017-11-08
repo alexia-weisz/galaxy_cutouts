@@ -983,8 +983,7 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
             newim = counts2jy_galex(newim, NUV2AB, pix_as)
 
         # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
-        set_trace()
-        gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
+        hdr['BUNIT'] = 'MJY/SFR' #gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
  
 
     newfile = os.path.join(output_dir, 'image_mosaic.fits')
