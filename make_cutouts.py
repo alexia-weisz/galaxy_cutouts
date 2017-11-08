@@ -64,13 +64,13 @@ def main(**kwargs):
     modeled backgrounds, images weighted by the exposure time, and converted to MJy/sr
 
     Usage:
-    %run make_cutouts.py --size 30 --band fuv --cutout --model_bg --weight_ims --convert_mjysr --tag SINGS
+    %run make_cutouts.py --size 30 --band fuv --model_bg --weight_ims --convert_mjysr --tag SINGS
+    (the model_bg and weight_ims flags do not need to be explicitly set as they are True by default)
 
     or
 
     import make_cutouts
-    make_cutouts.main(size=30, band='fuv', cutout=True, model_bg=True, weight_ims=True, 
-                      convert_mjysr=True, tag='SINGS')
+    make_cutouts.main(size=30, band='fuv', model_bg=True, weight_ims=True, convert_mjysr=True, tag='SINGS')
     """
 
     warnings.filterwarnings('ignore')
