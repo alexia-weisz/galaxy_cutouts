@@ -966,7 +966,7 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
     Returns
     -------
     newfile : str
-        Path to new, unweighted mosaiced file
+        Path to new, mosaiced file
     """
     image_file = os.path.join(output_dir, 'int_mosaic.fits')
     wt_file = os.path.join(output_dir, 'weights_mosaic.fits')
@@ -983,6 +983,7 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
             newim = counts2jy_galex(newim, NUV2AB, pix_as)
 
         # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
+        set_trace()
         gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
  
 
