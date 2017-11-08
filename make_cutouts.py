@@ -6,11 +6,8 @@ import warnings
 import argparse
 from pdb import set_trace
 
-#_OUT_DIR = '../cutouts/sings/'
-#_MIPS_DIR = '/data/tycho/0/leroy.42/ellohess/data/mips/sings/'
-#_LOS_DIR = '../../ellohess/code/index/'
-_KERNEL_DIR = '/data/tycho/0/leroy.42/ellohess/kernels/Low_Resolution/'
-_TEST_WRITE_DIR = '/n/home00/lewis.1590/research/galbase_allsky/cutouts/'
+
+#_TEST_WRITE_DIR = '/n/home00/lewis.1590/research/galbase_allsky/cutouts/'
 _GALDATA_DIR = '/n/home00/lewis.1590/research/galbase/gal_data/'
 
 def get_args():
@@ -67,15 +64,17 @@ def main(**kwargs):
     Example:
     This code can be run from the command line or imported and run within a separate program.
     The following example creates cutouts of the SINGS sample that are 30x30 arcminutes in the FUV with 
-    modeled backgrounds.
+    modeled backgrounds, images weighted by the exposure time, and converted to MJy/sr
 
     Usage:
-    %run make_cutouts.py --size 30 --band fuv --cutout --model_bg --tag SINGS
+    %run make_cutouts.py --size 30 --band fuv --cutout --model_bg --weight_ims --convert_mjysr --tag SINGS
 
     or
 
     import make_cutouts
-    make_cutouts.main(size=30, band='fuv', cutout=True, model_bg=True, tag='SINGS')"""
+    make_cutouts.main(size=30, band='fuv', cutout=True, model_bg=True, weight_ims=True, 
+                      convert_mjysr=True, tag='SINGS')
+    """
 
     if kwargs['cutout']:
         warnings.filterwarnings('ignore')

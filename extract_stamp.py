@@ -13,9 +13,12 @@ import time
 from pdb import set_trace
 
 
+# directories that contain the input data
 _TOP_DIR = '/data/tycho/0/leroy.42/allsky/'
 _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
 _WISE_DIR = os.path.join(_TOP_DIR, 'unwise', 'atlas')
+
+# directories to do the work in
 _WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
 _MOSAIC_DIR = os.path.join(_WORK_DIR, 'cutouts')
 
@@ -553,7 +556,7 @@ def counts2jy(norm_mag, calibration_value, pix_as):
     return val
 
 
-def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, pgcname=None, write_info=True, model_bg=False, weight_ims=False, convert_mjysr=False, desired_pix_scale=GALEX_PIX_AS, imtype='int', wttype='rrhr'):
+def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, pgcname=None, model_bg=False, weight_ims=False, convert_mjysr=False, desired_pix_scale=GALEX_PIX_AS, imtype='int', wttype='rrhr'):
     """
     Create cutouts of a galaxy in a single GALEX band.
 
@@ -571,8 +574,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
         Structured array containing the galbase information. The default is to read it in inside this code. (Default: None)
     name : str, optional
         Name of the galaxy for which to generate a cutout
-    write_info : bool, optional
-        Write info about each mosaic to file (Default: True) -- NO LONGER USED?
     model_bg : bool, optional
         Model the background of the mosaiced image (Default: False)
     weight_ims : bool, optional
@@ -911,14 +912,6 @@ def counts2jy_galex(counts, cal, pix_as):
     return val
 
 
-
-def wtpersr(wt, pix_as):
-    """
-    Convert weights data to per steradian. NOT USED
-    """
-    return wt / (np.radians(pix_as/3600.))**2
-
-
 def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype='int', wttype='rrhr'):
     """
     Mask pixels in the input images
@@ -1216,6 +1209,7 @@ def finish_weight(output_dir):
     return newfile, wt_file
 
 
+## UNUSED functions ##
 def remove_background(final_dir, imfile, bgfile):
     """
     Remove a background from the mosaiced image
