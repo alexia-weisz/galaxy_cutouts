@@ -632,9 +632,9 @@ def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_a
             wt, whdr = astropy.io.fits.getdata(wtfiles[i], header=True)
 
             if band.lower() == 'fuv':
-                im = counts2jy_galex(im, fuv_toab, pix_as)
+                im = counts2jy_galex(im, FUV2AB, pix_as)
             if band.lower() == 'nuv':
-                im = counts2jy_galex(im, nuv_toab, pix_as)
+                im = counts2jy_galex(im, NUV2AB, pix_as)
             if not os.path.exists(int_outfiles[i]):
                 astropy.io.fits.writeto(int_outfiles[i], im, hdr)
             if not os.path.exists(wt_outfiles[i]):
@@ -969,9 +969,9 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None):
     # CONVERT TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
     if convert_mjysr:
         if band.lower() == 'fuv':
-            newim = counts2jy_galex(newim, fuv_toab, pix_as)
+            newim = counts2jy_galex(newim, FUV2AB, pix_as)
         if band.lower() == 'nuv':
-            newim = counts2jy_galex(newim, nuv_toab, pix_as)
+            newim = counts2jy_galex(newim, NUV2AB, pix_as)
 
         # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
         gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
