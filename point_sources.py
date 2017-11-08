@@ -20,16 +20,19 @@ def get_world(data, hdr):
 	extent = [wra[0,0], wra[-1,-1], wdec[0,0], wdec[-1,-1]]
 	return world, extent, wcs
 
-
+SAVE = True
 _TOP_DIR = '/Users/lewis.1590/research/z0mgs'
 galaxies = ['NGC0300', 'NGC1682', 'NGC2976', 'NGC6744', 'NGC7800']
 gals_pgc = ['PGC3238', 'PGC16211', 'PGC28120', 'PGC62836', 'PGC73177']
+
+nuv_vmin = {'NGC0300':-2.5, 'NGC1682':-2.5, 'NGC2976':-2.5, 'NGC6744':-2.5, 'NGC7800':-3.0}
+nuv_vmax = {'NGC0300':-0.5, 'NGC1682':-0.5, 'NGC2976':-0.5, 'NGC6744':-0.5, 'NGC7800':-1.0}
 
 for gal, pgc in zip(galaxies, gals_pgc):
 
 	_WORK_DIR = os.path.join(_TOP_DIR, 'examples')
 
-	infile = os.path.join(_WORK_DIR, 'pt_sources_{}.csv'.format(gal.lower()))
+	infile = os.path.join(_WORK_DIR, 'more_pt_sources_{}.csv'.format(gal.lower()))
 	nuvfile = os.path.join(_WORK_DIR, '{}_NUV.FITS'.format(gal))
 	fuvfile = os.path.join(_WORK_DIR, '{}_FUV.FITS'.format(gal))
 	w1file = os.path.join(_WORK_DIR, 'wise', '{}_w1_mjysr.fits'.format(pgc))
@@ -48,11 +51,6 @@ for gal, pgc in zip(galaxies, gals_pgc):
 	w1world, w1extent, w1wcs = get_world(w1, w1hdr)
 	w2world, w2extent, w2wcs = get_world(w2, w2hdr)
 
-	print(gal)
-	print(nuvextent)
-	print(w1extent)
-	continue
-
 	cut_nuv = (data.nuv_mag > -999.)
 	cut_fuv = (data.fuv_mag > -999.)
 	cut1 = (data.nuv_mag > -999.) & (data.nuv_mag <= 18)
@@ -60,7 +58,6 @@ for gal, pgc in zip(galaxies, gals_pgc):
 	cut3 = (data.nuv_mag > 20.) & (data.nuv_mag <= 22)
 	cut4 = (data.nuv_mag > 22.) & (data.nuv_mag <= 24)
 	cut5 = (data.nuv_mag > 24.) & (data.nuv_mag <= 26)
-
 
 	cmap1 = plt.cm.gray
 	cmap2 = plt.cm.plasma
@@ -79,8 +76,8 @@ for gal, pgc in zip(galaxies, gals_pgc):
 	ax5 = fig.add_subplot(3,2,5, projection=w2wcs)
 	ax6 = fig.add_subplot(3,2,6, projection=w2wcs)
 
-	ax1.imshow(np.log10(nuv), vmin=-2.5, vmax=-0.5, **im_kwargs)
-	ax2.imshow(np.log10(nuv), vmin=-2.5, vmax=-0.5, **im_kwargs)
+	ax1.imshow(np.log10(nuv), vmin=nuv_vmin[gal], vmax=nuv_vmax[gal], **im_kwargs)
+	ax2.imshow(np.log10(nuv), vmin=nuv_vmin[gal], vmax=nuv_vmax[gal], **im_kwargs)
 
 	ax3.imshow(w1, vmin=-0.01, vmax=0.1, **im_kwargs)
 	ax4.imshow(w1, vmin=-0.01, vmax=0.1, **im_kwargs)
@@ -118,10 +115,12 @@ for gal, pgc in zip(galaxies, gals_pgc):
 
 	plt.suptitle('{} ({})'.format(gal, pgc), size=22)
 
-	plotname = os.path.join(_WORK_DIR, '{}.pdf'.format(gal))
-	plt.savefig(plotname, dpi=300, bbox_inches='tight', format='pdf')
-
-	#plt.show()
+	if SAVE:
+		plotname = os.path.join(_WORK_DIR, '{}.pdf'.format(gal))
+		plt.savefig(plotname, dpi=300, bbox_inches='tight', format='pdf')
+		plt.close()
+	else:
+		plt.show()
 
 
 
