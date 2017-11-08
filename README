@@ -1,12 +1,9 @@
-PRIMARY CODE:
-make_cutouts.py -- primary code: It gathers data from the galbase using gal_data.py (make sure it's either in this directory or that you import it from its current location).
-config.py -- contains the names, types, and default values for the entries in the galbase. If the format of the galbase changes, this will also need to be adjusted.
-make_cutouts.py -- a wrapper around the actual code that generates cutouts
-extract_stamp.py -- the actual code that generates the cutouts. All of the functions required for creating cutouts in GALEX are included in extract_stamp. It also includes a rough go at copying the WISE stamp-making process from that created by Adam Leroy in IDL.
+This code is designed to pull all of the GALEX tiles for a given galaxy from the galbase at OSU, mosaic those files to create a single image, quantify the noise in that image, and generate a cutout FITS file.
 
-TEST CODE:
-make_single_cutout.py -- test methods in extract_stamp.py. Do not use.
-single_cutout_test.py -- test methods in extract_stamp.py. Do not use.
-single_cutout_test_newmehtod.py -- test methods in extract_stamp.py. Do not use.
-test_known_files.py -- test methods in extract_stamp.py. Do not use.
-new_wget_commands.py -- writes out commands for getting files from the GALEX server for a set of images that make up a single mosaic.
+The two pieces that do that are:
+make_cutouts.py -- takes in command line options, gathers data for each galaxy from galbase to feed name, ra, and dec into extract_stamp.
+extract_stamp.py -- Given a galaxy name, ra, dec, and other options, it pulls all of the GALEX tiles in an overlap region around the galaxy, stitches them together, and outputs a FITS postage stamp.
+
+Other requirements:
+Montage
+Python montage_wrapper

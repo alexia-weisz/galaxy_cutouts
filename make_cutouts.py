@@ -1,5 +1,5 @@
 import numpy as np
-import config
+#import config
 import gal_data
 import extract_stamp
 import warnings
