@@ -499,7 +499,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # MAKE NOISE MOSAIC
-            noise_dir = make_noise_mosaic(im_dir, gal_dir, imtype=imtype)
+            noise_dir = make_noise_mosaic(gal_dir, name, imtype=imtype)
 
 
 
