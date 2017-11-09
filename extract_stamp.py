@@ -937,6 +937,18 @@ def make_noise_mosaic(gal_dir, galname, imtype='int'):
         mean_window = sp.filters.generic_filter(data, local_mean, size=size)
         return mean_window
 
+    def window_stdev(arr, radius):
+        U = arr.copy()
+        V = U.copy()
+        V[U != U] = 0.
+        c1 = sp.filters.uniform_filter(V, radius*2, origin=-radius)
+        W = 0 * U.copy() + 1.
+        W[U != U] = 0.
+        c2 = sp.filters.uniform_filter(W, radius*2, origin=-radius)
+        #c1 = sp.filters.uniform_filter(arr, radius*2, mode='constant', origin=-radius)
+        #c2 = sp.filters.uniform_filter(arr*arr, radius*2, mode='constant', origin=-radius)
+        return ((c2 - c1*c1)**.5)[:-radius*2+1,:-radius*2+1]
+
     # create the noise directories
     noisetype = 'noise'
     noise_dir = os.path.join(gal_dir, noisetype)
@@ -976,6 +988,9 @@ def make_noise_mosaic(gal_dir, galname, imtype='int'):
     mosaic_noise_dir = os.path.join(noise_dir, 'mosaic')
     os.makedirs(mosaic_noise_dir)
     coadd(hdr_final, mosaic_noise_dir, reproj_noise_dir, output=noisetype, add_type='mean')
+
+
+
 
 # ------------------ #
 ## UNUSED functions ##
