@@ -278,14 +278,6 @@ class GalaxyHeader(object):
                 self.write_headerfile(self.hdrfile, self.hdr)
 
 
-def window(data):
-    def local_mean(A):
-        return np.nanmean(A)
-
-    mean_window = sp.filters.generic_filter(data, local_mean, size=3)
-    return mean_window
-
-
 def calc_tile_overlap(ra_ctr, dec_ctr, pad=0.0, min_ra=0., max_ra=180., min_dec=-90., max_dec=90.):
     """
     Find all tiles that fall within a given overlap (pad) of (ra_ctr, dec_ctr)
@@ -507,7 +499,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # MAKE NOISE MOSAIC
-            noise_dir = make_noise_input(im_dir, gal_dir, imtype=imtype)
+            noise_dir = make_noise_mosaic(im_dir, gal_dir, imtype=imtype)
 
 
 
@@ -938,6 +930,13 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
 
 
 def make_noise_mosaic(gal_dir, galname, imtype='int'):
+    def window(data, size=3):
+        def local_mean(A):
+            return np.nanmean(A)
+
+        mean_window = sp.filters.generic_filter(data, local_mean, size=size)
+        return mean_window
+
     # create the noise directories
     noisetype = 'noise'
     noise_dir = os.path.join(gal_dir, noisetype)
