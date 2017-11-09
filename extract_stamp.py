@@ -420,22 +420,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             nfiles = get_input(index, ind, data_dir, input_dir, hdr=gal_hdr)
             im_dir, wt_dir = input_dir, input_dir
 
-            # MAKE EXTENDED HEADER FOR REPROJECTING USING MONTAGE COMMANDS
+            # WRITE TABLE OF INPUT IMAGE INFORMATION
             input_table = os.path.join(im_dir, 'input.tbl')
             montage.mImgtbl(im_dir, input_table, corners=True)
            
 
-            # CONVERT INT FILES TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
-            # if convert_mjysr:
-            #     converted_dir = os.path.join(gal_dir, 'converted')
-            #     os.makedirs(converted_dir)
-            #     convert_files(converted_dir, im_dir, wt_dir, band, FUV2AB, NUV2AB, desired_pix_scale)
-            #     im_dir, wt_dir = converted_dir, converted_dir
-
-
-            #     # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
-            #     gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
- 
+            # DETERMINE NOISE IN INPUT IMAGES
+            noise_dir = make_noise_input(im_dir)
 
 
             # MASK IMAGES
@@ -502,7 +493,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             coadd(gal_hdr.hdrfile, penultimate_dir, wt_dir, output='weights', add_type='mean')
 
 
-            # DIVIDE OUT THE WEIGHTS
+            # DIVIDE OUT THE WEIGHTS AND CONVERT TO MJY/SR
             imagefile, wtfile = finish_weight(penultimate_dir, convert_mjysr=convert_mjysr, band=band, 
                                               gal_hdr=gal_hdr, pix_as=desired_pix_scale)
 
@@ -605,51 +596,6 @@ def get_input(index, ind, data_dir, input_dir, hdr=None):
         os.symlink(flgfile, new_flg_file)
 
     return len(infiles)
-
-
-def convert_files(converted_dir, im_dir, wt_dir, band, fuv_toab, nuv_toab, pix_as, hdr=None):
-    """
-    Convert GALEX files from cts/sec to MJy/sr
-
-    Parameters
-    ----------
-    converted_dir : str
-        Path to temp directory in which to store converted files
-    im_dir : str
-        Path to directory that holds the input images (-int files in GALEX)
-    wt_dir : str
-        Path to directory that holds the input weights images (-rrhr files in GALEX)
-    band : str
-        waveband to use: fuv or nuv
-    fuv_toab : float
-        GALEX FUV conversion from counts to AB mag
-    nuv_toab : float
-        GALEX NUV conversion from counts to AB mag
-    pix_as : float
-        pixel scale in arcseconds
-    """
-    
-    intfiles = sorted(glob.glob(os.path.join(im_dir, '*-int.fits')))
-    wtfiles = sorted(glob.glob(os.path.join(wt_dir, '*-rrhr.fits')))
-
-    int_outfiles = [os.path.join(converted_dir, os.path.basename(f)) for f in intfiles]
-    wt_outfiles = [os.path.join(converted_dir, os.path.basename(f)) for f in wtfiles]
-
-    for i in range(len(intfiles)):
-        if os.path.exists(wtfiles[i]):
-            im, hdr = astropy.io.fits.getdata(intfiles[i], header=True)
-            wt, whdr = astropy.io.fits.getdata(wtfiles[i], header=True)
-
-            if band.lower() == 'fuv':
-                im = counts2jy_galex(im, FUV2AB, pix_as)
-            if band.lower() == 'nuv':
-                im = counts2jy_galex(im, NUV2AB, pix_as)
-            if not os.path.exists(int_outfiles[i]):
-                astropy.io.fits.writeto(int_outfiles[i], im, hdr)
-            if not os.path.exists(wt_outfiles[i]):
-                astropy.io.fits.writeto(wt_outfiles[i], wt, whdr)
-        else:
-            continue
         
 
 def counts2jy_galex(counts, cal, pix_as):
@@ -977,10 +923,8 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
 
     # CONVERT TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
     if convert_mjysr:
-        if band.lower() == 'fuv':
-            newim = counts2jy_galex(newim, FUV2AB, pix_as)
-        if band.lower() == 'nuv':
-            newim = counts2jy_galex(newim, NUV2AB, pix_as)
+        uv2ab = {'fuv': FUV2AB, 'nuv': NUV2AB}
+        newim = counts2jy_galex(newim, uv2ab[band.lower()], pix_as)
 
         # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
         hdr['BUNIT'] = 'MJY/SR' #gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
@@ -991,6 +935,9 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
 
     return newfile, wt_file
 
+
+def make_noise_input(im_dir, imtype='int'):
+    imfiles = sorted(glob.glob(os.path.join(im_dir, '*-{}.fits'.format(imtype))))
 
 # ------------------ #
 ## UNUSED functions ##
