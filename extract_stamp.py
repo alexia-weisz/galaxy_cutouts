@@ -3,7 +3,7 @@ import astropy.io.fits
 import astropy.wcs
 import montage_wrapper as montage
 from matplotlib.path import Path
-import sewpy
+#import sewpy
 import os
 import sys
 import shutil
@@ -437,10 +437,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             wt_dir = wt_masked_dir
 
 
-            # DETERMINE NOISE IN INPUT IMAGES
-            #noise_dir = make_noise_input(im_dir)
-
-
             # REPROJECT IMAGES WITH EXTENDED HEADER
             reprojected_dir = os.path.join(gal_dir, 'reprojected')
             reproj_im_dir = os.path.join(reprojected_dir, imtype)
@@ -508,6 +504,11 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # copy weights mosaic to final directory
             shutil.copy(wtfile, os.path.join(final_dir, 'weights_mosaic.fits'))
+
+
+            # MAKE NOISE MOSAIC
+            noise_dir = make_noise_input(im_dir, gal_dir, imtype=imtype)
+
 
 
             # COPY MOSAIC FILES TO CUTOUTS DIRECTORY
@@ -936,8 +937,46 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
     return newfile, wt_file
 
 
-def make_noise_input(im_dir, imtype='int'):
+def make_noise_mosaic(gal_dir, galname, imtype='int'):
+    # create the noise directories
+    noisetype = 'noise'
+    noise_dir = os.path.join(gal_dir, noisetype)
+    input_noise_dir = os.path.join(noise_dir, 'input')
+    if not os.path.exists(noise_dir):
+        os.makedirs(input_noise_dir)
+
+    # specify the headers
+    hdr_ext = os.path.join(gal_dir, '{}_template_ext.hdr'.format(galname))
+    hdr_final = os.path.join(gal_dir, '{}_template.hdr'.format(galname))
+
+    # determine the noise value(s)
+    im_dir = os.path.join(gal_dir, 'masked', imtype)
     imfiles = sorted(glob.glob(os.path.join(im_dir, '*-{}.fits'.format(imtype))))
+    for imfile in imfiles:
+        data, hdr = astropy.io.fits.getdata(imfile, header=True)
+        sel = np.isfinite(data)
+        data[sel] = np.std(data[sel])
+        outfile = os.path.join(input_noise_dir, os.path.basename(imfile).replace(imtype, noisetype))
+        astropy.io.fits.writeto(outfile, data, hdr)
+
+    # make table of metdata info
+    input_noise_table = os.path.join(noise_dir, 'input_{}.tbl'.format(noisetype))
+    montage.mImgtbl(input_noise_dir, input_noise_table, corners=True)
+
+    # then reproject the noise images
+    reproj_noise_dir = os.path.join(noise_dir, 'reprojected')
+    os.makedirs(reproj_noise_dir)
+    #reproject_images(gal_hdr.hdrfile_ext, input_noise_dir, reproj_noise_dir, noisetype)
+    reproject_images(hdr_ext, input_noise_dir, reproj_noise_dir, noisetype)
+
+    # create metadata table for coaddition
+    weight_noise_table = os.path.join(noise_dir, 'reprojected_{}.tbl'.format(noisetype))
+    montage.mImgtbl(reproj_noise_dir, weight_noise_table, corners=True)
+
+    # coadd
+    mosaic_noise_dir = os.path.join(noise_dir, 'mosaic')
+    os.makedirs(mosaic_noise_dir)
+    coadd(hdr_final, mosaic_noise_dir, reproj_noise_dir, output=noisetype, add_type='mean')
 
 # ------------------ #
 ## UNUSED functions ##
