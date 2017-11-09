@@ -425,10 +425,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             montage.mImgtbl(im_dir, input_table, corners=True)
            
 
-            # DETERMINE NOISE IN INPUT IMAGES
-            noise_dir = make_noise_input(im_dir)
-
-
             # MASK IMAGES
             masked_dir = os.path.join(gal_dir, 'masked')
             im_masked_dir = os.path.join(masked_dir, imtype)
@@ -439,6 +435,10 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype=imtype, wttype=wttype)
             im_dir = im_masked_dir
             wt_dir = wt_masked_dir
+
+
+            # DETERMINE NOISE IN INPUT IMAGES
+            #noise_dir = make_noise_input(im_dir)
 
 
             # REPROJECT IMAGES WITH EXTENDED HEADER
