@@ -931,10 +931,10 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
 
 def make_noise_mosaic(gal_dir, galname, imtype='int'):
     def window(data, size=3):
-        def local_mean(A):
-            return np.nanmean(A)
+        def local_std(A):
+            return np.nanstd(A)
 
-        mean_window = sp.filters.generic_filter(data, local_mean, size=size)
+        mean_window = sp.filters.generic_filter(data, local_std, size=size)
         return mean_window
 
     def window_stdev(arr, radius):
@@ -948,6 +948,12 @@ def make_noise_mosaic(gal_dir, galname, imtype='int'):
         #c1 = sp.filters.uniform_filter(arr, radius*2, mode='constant', origin=-radius)
         #c2 = sp.filters.uniform_filter(arr*arr, radius*2, mode='constant', origin=-radius)
         return ((c2 - c1*c1)**.5)[:-radius*2+1,:-radius*2+1]
+
+    def single_value(data):
+        sel = np.isfinite(data)
+        data[sel] = np.std(data[sel])
+        return data
+
 
     # create the noise directories
     noisetype = 'noise'
@@ -965,10 +971,9 @@ def make_noise_mosaic(gal_dir, galname, imtype='int'):
     imfiles = sorted(glob.glob(os.path.join(im_dir, '*-{}.fits'.format(imtype))))
     for imfile in imfiles:
         data, hdr = astropy.io.fits.getdata(imfile, header=True)
-        sel = np.isfinite(data)
-        data[sel] = np.std(data[sel])
+        newdata = single_value(data)
         outfile = os.path.join(input_noise_dir, os.path.basename(imfile).replace(imtype, noisetype))
-        astropy.io.fits.writeto(outfile, data, hdr)
+        astropy.io.fits.writeto(outfile, newdata, hdr)
 
     # make table of metdata info
     input_noise_table = os.path.join(noise_dir, 'input_{}.tbl'.format(noisetype))
