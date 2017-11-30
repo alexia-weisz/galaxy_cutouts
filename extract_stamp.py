@@ -994,6 +994,11 @@ def make_noise_mosaic(gal_dir, galname, imtype='int'):
     os.makedirs(mosaic_noise_dir)
     coadd(hdr_final, mosaic_noise_dir, reproj_noise_dir, output=noisetype, add_type='mean')
 
+    # copy to final directory
+    noise_mosaic = os.path.join(mosaic_noise_dir, 'noise_mosaic.fits')
+    final_noise_mosaic = os.path.join(_MOSAIC_DIR, '{}_{}_noise.FITS'.format(name, band))
+    shutil.copy(noise_mosaic, final_noise_mosaic)
+
 
 
 
