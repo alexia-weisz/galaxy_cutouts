@@ -21,7 +21,7 @@ def get_args():
     parser.add_argument('--model_bg', default=True, help='model the background to match all images as best as possible. Default: True')
     parser.add_argument('--weight_ims', default=True, help='weight the input images by the desired weight images. Default: True')
     parser.add_argument('--convert_mjysr', action='store_true', help='set to convert images to MJy/sr. Default: False')
-    parser.add_argument('--galaxy_list', default=None, help='Galaxy name if doing a single cutout or list of names. Default: None')
+    parser.add_argument('--galaxy_list', default=None, nargs='+', help='Galaxy name if doing a single cutout or list of names. Default: None')
     parser.add_argument('--all_galaxies', action='store_true', help='run all galaxies in database. Default: False; include flag to store_true')
     parser.add_argument('--tag', default=None, help='tag to select galaxies, i.e., SINGS, HERACLES, etc. Default: None')
     parser.add_argument('--inds', nargs=2, type=int, help='index the all galaxy array')

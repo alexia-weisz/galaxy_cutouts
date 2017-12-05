@@ -10,6 +10,8 @@ import shutil
 import glob
 import time
 
+import scipy.ndimage as sp
+
 from pdb import set_trace
 
 
@@ -499,7 +501,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # MAKE NOISE MOSAIC
-            noise_dir = make_noise_mosaic(gal_dir, name, imtype=imtype)
+            #noise_dir = make_noise_mosaic(gal_dir, name, band=band, imtype=imtype)
 
 
 
@@ -516,7 +518,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # REMOVE TEMP GALAXY DIRECTORY AND EXTRA FILES
-            shutil.rmtree(gal_dir, ignore_errors=True)
+            #shutil.rmtree(gal_dir, ignore_errors=True)
 
 
             # NOTE TIME TO FINISH
@@ -929,7 +931,7 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
     return newfile, wt_file
 
 
-def make_noise_mosaic(gal_dir, galname, imtype='int'):
+def make_noise_mosaic(gal_dir, galname, band='fuv', imtype='int'):
     def window(data, size=3):
         def local_std(A):
             return np.nanstd(A)
@@ -996,7 +998,7 @@ def make_noise_mosaic(gal_dir, galname, imtype='int'):
 
     # copy to final directory
     noise_mosaic = os.path.join(mosaic_noise_dir, 'noise_mosaic.fits')
-    final_noise_mosaic = os.path.join(_MOSAIC_DIR, '{}_{}_noise.FITS'.format(name, band))
+    final_noise_mosaic = os.path.join(_MOSAIC_DIR, '{}_{}_noise.FITS'.format(galname, band))
     shutil.copy(noise_mosaic, final_noise_mosaic)
 
 
