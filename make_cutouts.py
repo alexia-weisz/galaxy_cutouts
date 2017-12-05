@@ -98,7 +98,6 @@ def main(**kwargs):
                         'imtype': kwargs['imtype'], 'wttype': kwargs['wttype'], 
                         'desired_pix_scale': kwargs['desired_pix_scale']}
         if wband == 'fuv':
-            set_trace()
             extract_stamp.galex(band='fuv', **stamp_kwargs)
         elif wband == 'nuv':
             extract_stamp.galex(band='nuv', **stamp_kwargs)
