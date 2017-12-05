@@ -88,9 +88,9 @@ def main(**kwargs):
     size_deg = kwargs['size'] * 60. / 3600. #convert from arcminutes to degrees
 
     for i in range(n_gals):
-        galname = gals['name'][0].replace(' ', '').upper()
-        pgcname = gals['pgcname'][0]
-        ra_ctr, dec_ctr = gals['ra_deg'], gals['dec_deg']
+        galname = gals['name'][i].replace(' ', '').upper()
+        pgcname = gals['pgcname'][i]
+        ra_ctr, dec_ctr = gals['ra_deg'][i], gals['dec_deg'][i]
 
         stamp_kwargs = {'ra_ctr': ra_ctr, 'dec_ctr': dec_ctr, 'size_deg': size_deg, 'name': galname, 
                         'pgcname': pgcname, 'model_bg': kwargs['model_bg'], 
@@ -98,6 +98,7 @@ def main(**kwargs):
                         'imtype': kwargs['imtype'], 'wttype': kwargs['wttype'], 
                         'desired_pix_scale': kwargs['desired_pix_scale']}
         if wband == 'fuv':
+            set_trace()
             extract_stamp.galex(band='fuv', **stamp_kwargs)
         elif wband == 'nuv':
             extract_stamp.galex(band='nuv', **stamp_kwargs)
