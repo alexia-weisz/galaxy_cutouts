@@ -909,7 +909,7 @@ def counts2jy_galex(counts, cal, pix_as):
     Returns
     -------
     val : float
-        Converted count rate data
+        Count rate converted to MJy/sr
     """
     # first convert to abmag
     abmag = -2.5 * np.log10(counts) + cal
@@ -923,7 +923,7 @@ def counts2jy_galex(counts, cal, pix_as):
     # then to MJy/sr
     pix_rad = np.radians(pix_as / 3600.) # pixel scale coverted from arcsec to radians
     val = f_nu / (pix_rad)**2
-    
+
     return val
 
 
