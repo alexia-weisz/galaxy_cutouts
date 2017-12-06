@@ -27,6 +27,7 @@ _MOSAIC_DIR = os.path.join(_WORK_DIR, 'cutouts')
 # CALIBRATION FROM GALEX COUNTS TO ABMAG
 FUV2AB = 18.82
 NUV2AB = 20.08
+UV2AB = {'fuv': FUV2AB, 'nuv': NUV2AB}
 
 GALEX_PIX_AS = 1.5 ## galex pixel scale in arcseconds -- from documentation
 
@@ -484,8 +485,11 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # DIVIDE OUT THE WEIGHTS AND CONVERT TO MJY/SR
-            imagefile, wtfile = finish_weight(penultimate_dir, convert_mjysr=convert_mjysr, band=band, 
-                                              gal_hdr=gal_hdr, pix_as=desired_pix_scale)
+            imagefile, wtfile = finish_weight(penultimate_dir)
+
+
+            if convert_mjysr:
+                convert_to_flux(imagefile)
 
             
             # SUBTRACT OUT THE BACKGROUND
@@ -502,7 +506,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # MAKE NOISE MOSAIC
             #noise_dir = make_noise_mosaic(gal_dir, name, band=band, imtype=imtype)
-
 
 
             # COPY MOSAIC FILES TO CUTOUTS DIRECTORY
@@ -592,38 +595,6 @@ def get_input(index, ind, data_dir, input_dir, hdr=None):
 
     return len(infiles)
         
-
-def counts2jy_galex(counts, cal, pix_as):
-    """
-    Convert GALEX counts/s to MJy/sr
-
-    Parameters
-    ----------
-    counts : float
-        Array containing counts data to be converted
-    cal : float
-        Calibration value from counts to AB mag for desired band (FUV or NUV)
-    pix_as : float
-        Pixel scale in arcseconds
-
-    Returns
-    -------
-    val : float
-        Converted count rate data
-    """
-    # first convert to abmag
-    abmag = -2.5 * np.log10(counts) + cal
-
-    # then convert to Jy
-    f_nu = 10**(abmag/-2.5) * 3631.
-
-    # then to MJy
-    f_nu *= 1e-6
-
-    # then to MJy/sr
-    val = f_nu / (np.radians(pix_as/3600.))**2
-    return val
-
 
 def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype='int', wttype='rrhr'):
     """
@@ -916,19 +887,53 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
     wt = astropy.io.fits.getdata(wt_file)
     newim = im / wt
 
-    # CONVERT TO MJY/SR AND WRITE NEW FILES INTO TEMP DIR
-    if convert_mjysr:
-        uv2ab = {'fuv': FUV2AB, 'nuv': NUV2AB}
-        newim = counts2jy_galex(newim, uv2ab[band.lower()], pix_as)
-
-        # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
-        hdr['BUNIT'] = 'MJY/SR' #gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
- 
-
     newfile = os.path.join(output_dir, 'image_mosaic.fits')
     astropy.io.fits.writeto(newfile, newim, hdr)
 
     return newfile, wt_file
+
+
+def counts2jy_galex(counts, cal, pix_as):
+    """
+    Convert GALEX counts/s to MJy/sr
+
+    Parameters
+    ----------
+    counts : float
+        Array containing counts data to be converted
+    cal : float
+        Calibration value from counts to AB mag for desired band (FUV or NUV)
+    pix_as : float
+        Pixel scale in arcseconds
+
+    Returns
+    -------
+    val : float
+        Converted count rate data
+    """
+    # first convert to abmag
+    abmag = -2.5 * np.log10(counts) + cal
+
+    # then convert to Jy
+    f_nu = 10**(abmag/-2.5) * 3631.
+
+    # then to MJy
+    f_nu *= 1e-6
+
+    # then to MJy/sr
+    val = f_nu / (np.radians(pix_as/3600.))**2
+    return val
+
+
+def convert_to_flux(mosaicfile):
+    data, hdr = astropy.io.fits.getdata(mosaicfile, header=True)
+    newim = counts2jy_galex(data, UV2AB[band.lower()], pix_as)
+
+    # APPEND UNIT INFORMATION TO NEW HEADER AND WRITE OUT HEADER FILE
+    hdr['BUNIT'] = 'MJY/SR' #gal_hdr.append2hdr(keyword='BUNIT', value='MJY/SR', ext=False)
+
+    newfile = os.path.join(os.path.dirname(mosaicfile), 'image_mosaic_mjysr.fits')
+    astropy.io.fits.writeto(newfile, newim, hdr)
 
 
 def make_noise_mosaic(gal_dir, galname, band='fuv', imtype='int'):
