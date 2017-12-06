@@ -489,7 +489,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             if convert_mjysr:
-                convert_to_flux(imagefile)
+                convert_to_flux(imagefile, band, desired_pix_scale)
 
             
             # SUBTRACT OUT THE BACKGROUND
@@ -927,7 +927,7 @@ def counts2jy_galex(counts, cal, pix_as):
     return val
 
 
-def convert_to_flux(mosaicfile):
+def convert_to_flux(mosaicfile, band, pix_as):
     data, hdr = astropy.io.fits.getdata(mosaicfile, header=True)
     newim = counts2jy_galex(data, UV2AB[band.lower()], pix_as)
 
