@@ -420,6 +420,11 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             montage.mImgtbl(im_dir, input_table, corners=True)
            
 
+            if convert_mjysr:
+                convert_to_flux_input(im_dir)
+
+
+
             # MASK IMAGES
             masked_dir = os.path.join(gal_dir, 'masked')
             im_masked_dir = os.path.join(masked_dir, imtype)
@@ -488,8 +493,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             imagefile, wtfile = finish_weight(penultimate_dir)
 
 
-            if convert_mjysr:
-                convert_to_flux(imagefile, band, desired_pix_scale)
+            #if convert_mjysr:
+            #    convert_to_flux_final(imagefile, band, desired_pix_scale)
 
             
             # SUBTRACT OUT THE BACKGROUND
@@ -922,12 +927,19 @@ def counts2jy_galex(counts, cal, pix_as):
 
     # then to MJy/sr
     pix_rad = np.radians(pix_as / 3600.) # pixel scale coverted from arcsec to radians
-    val = f_nu / (pix_rad)**2
+    pix_sr = pix_rad ** 2. # pixel scale converted from radians to steradians
+    val = f_nu / pix_sr
 
     return val
 
 
-def convert_to_flux(mosaicfile, band, pix_as):
+def convert_to_flux_input(imdir):
+    pass
+
+
+
+
+def convert_to_flux_final(mosaicfile, band, pix_as):
     data, hdr = astropy.io.fits.getdata(mosaicfile, header=True)
     newim = counts2jy_galex(data, UV2AB[band.lower()], pix_as)
 
