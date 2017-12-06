@@ -521,7 +521,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # REMOVE TEMP GALAXY DIRECTORY AND EXTRA FILES
-            #shutil.rmtree(gal_dir, ignore_errors=True)
+            shutil.rmtree(gal_dir, ignore_errors=True)
 
 
             # NOTE TIME TO FINISH
@@ -921,7 +921,9 @@ def counts2jy_galex(counts, cal, pix_as):
     f_nu *= 1e-6
 
     # then to MJy/sr
-    val = f_nu / (np.radians(pix_as/3600.))**2
+    pix_rad = np.radians(pix_as / 3600.) # pixel scale coverted from arcsec to radians
+    val = f_nu / (pix_rad)**2
+    
     return val
 
 
