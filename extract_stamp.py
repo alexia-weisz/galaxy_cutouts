@@ -419,10 +419,13 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             input_table = os.path.join(im_dir, 'input.tbl')
             montage.mImgtbl(im_dir, input_table, corners=True)
            
-
+            #set_trace()
             if convert_mjysr:
-                convert_to_flux_input(im_dir)
-
+                converted_dir = os.path.join(gal_dir, 'converted')
+                if not os.path.exists(converted_dir):
+                    os.makedirs(converted_dir)
+                convert_to_flux_input(im_dir, converted_dir, band, desired_pix_scale, imtype=imtype)
+                im_dir = converted_dir
 
 
             # MASK IMAGES
@@ -526,7 +529,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # REMOVE TEMP GALAXY DIRECTORY AND EXTRA FILES
-            shutil.rmtree(gal_dir, ignore_errors=True)
+            #shutil.rmtree(gal_dir, ignore_errors=True)
 
 
             # NOTE TIME TO FINISH
@@ -933,10 +936,14 @@ def counts2jy_galex(counts, cal, pix_as):
     return val
 
 
-def convert_to_flux_input(imdir):
-    pass
-
-
+def convert_to_flux_input(indir, outdir, band, pix_as, imtype='int'):
+    infiles = sorted(glob.glob(os.path.join(indir, '*-{}.fits'.format(imtype))))
+    for infile in infiles:
+        data, hdr = astropy.io.fits.getdata(infile, header=True)
+        newdata = counts2jy_galex(data, UV2AB[band.lower()], pix_as)
+        hdr['BUNIT'] = 'MJY/SR'
+        outfile = os.path.join(outdir, os.path.basename(infile))
+        astropy.io.fits.writeto(outfile, newdata, hdr)
 
 
 def convert_to_flux_final(mosaicfile, band, pix_as):
