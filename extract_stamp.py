@@ -630,7 +630,7 @@ def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype='intbgsub',
         mask_galex(image_infile, wt_infile, image_outfile, wt_outfile)
 
 
-def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_intfile, out_wtfile):
+def mask_galex(intfile, wtfile, , out_intfile, out_wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920):
     """
     The actual masking routine. Selects pixels that are close to the edges of the chips
     or that have bad values, and masks them.
