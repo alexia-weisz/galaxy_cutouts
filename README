@@ -32,18 +32,18 @@ OR
 
 
 Optional arguments are
---imtype IMTYPE -- input image type to use. Default is `int' but you will want to change to `intbgsub'
---wttype WTTYPE -- weight image type to use. Default is `rrhr'. This will probably not change.
---size SIZE 	-- cutout size in arcminutes. Default is 30. The cutouts will be square.
+--imtype IMTYPE - input image type to use. Default is `int' but you will want to change to `intbgsub'
+--wttype WTTYPE - weight image type to use. Default is `rrhr'. This will probably not change.
+--size SIZE - cutout size in arcminutes. Default is 30. The cutouts will be square.
 --desired_pix_scale DESIRED_PIX_SCALE -- desired pixel scale of output image. Default is 1.5, which is the GALEX pixel scale.
---band BAND  	-- GALEX band to use (fuv or nuv). If you don't specify the band, it will automatically do both fuv and nuv.
---model_bg MODEL_BG -- The background is automatically modeled by Montage. If you DO NOT want to model the background, then include --model_bg False
---weight_ims WEIGHT_IMS -- The input images are automatically weighted by the weight images. If you DO NOT want to weight the input images, then include --weight_ims False
---convert_mjysr -- Including --convert_mjysr in the call will convert the input images to MJy/sr
---galaxy_list GALAXY_LIST -- Specify the galaxies for which you want to make cutouts. E.g., --galaxy_list NGC0300 NGC0628 NGC2976
---all_galaxies -- Include the arguemnt --all_galaxies if you want to make cutouts of all the galaxies
---tag TAG -- the tag to use to specify a group in the galbase, e.g., --tag SINGS
---inds IND1 IND2 -- the start and stop indices to use for indexing the gals array. 
+--band BAND - GALEX band to use (fuv or nuv). If you don't specify the band, it will automatically do both fuv and nuv.
+--model_bg MODEL_BG - The background is automatically modeled by Montage. If you DO NOT want to model the background, then include --model_bg False
+--weight_ims WEIGHT_IMS - The input images are automatically weighted by the weight images. If you DO NOT want to weight the input images, then include --weight_ims False
+--convert_mjysr - The input images are automatically converted from counts/sec to MJy/sr. If you DO NOT want to convert the images, then include --convert_mjysr False
+--galaxy_list GALAXY_LIST - Specify the galaxies for which you want to make cutouts. E.g., --galaxy_list NGC0300 NGC0628 NGC2976
+--all_galaxies - Include the arguemnt --all_galaxies if you want to make cutouts of all the galaxies
+--tag TAG - the tag to use to specify a group in the galbase, e.g., --tag SINGS
+--inds IND1 IND2 - the start and stop indices to use for indexing the gals array. 
 
 
 Right now, you must include one of --galaxy_list, --all_galaxies, --tag, --inds IND1 IND2
