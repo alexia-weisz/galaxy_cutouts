@@ -20,8 +20,8 @@ _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
 _WISE_DIR = os.path.join(_TOP_DIR, 'unwise', 'atlas')
 
 # directories to do the work in
-#_WORK_DIR = '/data/tycho/0/leroy.42/allsky/galex/atlas'
-_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
+_WORK_DIR = '/data/tycho/0/leroy.42/allsky/galex/atlas'
+#_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
 _MOSAIC_DIR = os.path.join(_WORK_DIR, 'cutouts')
 
 # CALIBRATION FROM GALEX COUNTS TO ABMAG
@@ -479,7 +479,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
-            weight_table = create_table(wt_dir, dir_type=wttype)
+            weight_table = create_table(wt_dir, dir_type='weights')
             weighted_table = create_table(im_dir, dir_type=imtype)
 
 
@@ -526,7 +526,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # REMOVE TEMP GALAXY DIRECTORY AND EXTRA FILES
-            #shutil.rmtree(gal_dir, ignore_errors=True)
+            shutil.rmtree(gal_dir, ignore_errors=True)
 
 
             # NOTE TIME TO FINISH
@@ -548,7 +548,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             me = sys.exc_info()[0]
             with open(problem_file, 'a') as myfile:
                 myfile.write(pgcname + ': ' + str(me) + ': '+str(inst)+'\n')
-            #shutil.rmtree(gal_dir, ignore_errors=True)
+            shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
 
@@ -630,7 +630,7 @@ def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype='intbgsub',
         mask_galex(image_infile, wt_infile, image_outfile, wt_outfile)
 
 
-def mask_galex(intfile, wtfile, out_intfile, out_wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920):
+def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_intfile, out_wtfile):
     """
     The actual masking routine. Selects pixels that are close to the edges of the chips
     or that have bad values, and masks them.
