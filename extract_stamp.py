@@ -20,7 +20,8 @@ _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
 _WISE_DIR = os.path.join(_TOP_DIR, 'unwise', 'atlas')
 
 # directories to do the work in
-_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
+_WORK_DIR = '/data/tycho/0/leroy.42/allsky/galex/atlas'
+#_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
 _MOSAIC_DIR = os.path.join(_WORK_DIR, 'cutouts')
 
 # CALIBRATION FROM GALEX COUNTS TO ABMAG
@@ -326,7 +327,7 @@ def calc_tile_overlap(ra_ctr, dec_ctr, pad=0.0, min_ra=0., max_ra=180., min_dec=
     return overlap
 
 
-def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, pgcname=None, model_bg=False, weight_ims=False, convert_mjysr=False, desired_pix_scale=GALEX_PIX_AS, imtype='int', wttype='rrhr'):
+def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, pgcname=None, model_bg=True, weight_ims=True, convert_mjysr=True, desired_pix_scale=GALEX_PIX_AS, imtype='intbgsub', wttype='rrhr'):
     """
     Create cutouts of a galaxy in a single GALEX band.
 
@@ -344,6 +345,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
         Structured array containing the galbase information. The default is to read it in inside this code. (Default: None)
     name : str, optional
         Name of the galaxy for which to generate a cutout
+    pgcname : str, optional
+        PGC name of the galaxy
     model_bg : bool, optional
         Model the background of the mosaiced image (Default: False)
     weight_ims : bool, optional
@@ -360,14 +363,14 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
     ttype = 'galex'
     data_dir = os.path.join(_TOP_DIR, ttype, 'sorted_tiles')
     problem_file = os.path.join(_WORK_DIR, 'problem_galaxies_{}.txt'.format(band))# 'problem_galaxies_' + band + '.txt')
-    bg_reg_file = os.path.join(_WORK_DIR, 'galex_reprojected_bg.reg')
+    #bg_reg_file = os.path.join(_WORK_DIR, 'galex_reprojected_bg.reg')
     numbers_file = os.path.join(_WORK_DIR, 'gal_reproj_info_{}.txt'.format(band))# 'gal_reproj_info_' + band + '.dat')
 
-    galaxy_mosaic_file = os.path.join(_MOSAIC_DIR, '_'.join([name, band]).upper() + '.FITS')
+    galaxy_mosaic_file = os.path.join(_MOSAIC_DIR, '_'.join([pgcname, band]).upper() + '.FITS')
 
     if not os.path.exists(galaxy_mosaic_file):
         start_time = time.time()
-        print name, band.upper()
+        print pgcname, band.upper()
 
         # READ THE INDEX FILE (IF NOT PASSED IN)
         if index is None:
@@ -392,23 +395,24 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
         ct_overlap = len(ind[0])
         if ct_overlap == 0:
             with open(problem_file, 'a') as myfile:
-                myfile.write(name + ': ' + 'No overlapping tiles\n')
+                myfile.write(pgcname + ': ' + 'No overlapping tiles\n')
             return
 
         pix_scale = desired_pix_scale / 3600.  # 1.5 arbitrary: how should I set it?
 
         try:
             # CREATE NEW TEMP DIRECTORY TO STORE TEMPORARY FILES
-            gal_dir = os.path.join(_WORK_DIR, '_'.join([name, band]).upper())
+            gal_dir = os.path.join(_WORK_DIR, '_'.join([pgcname, band]).upper())
             os.makedirs(gal_dir)
 
             # MAKE HEADER AND EXTENDED HEADER AND WRITE TO FILE
-            gal_hdr = GalaxyHeader(name, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
+            gal_hdr = GalaxyHeader(pgcname, gal_dir, ra_ctr, dec_ctr, size_deg, pix_scale, factor=3)
 
 
             # GATHER THE INPUT FILES
             input_dir = os.path.join(gal_dir, 'input')
-            os.makedirs(input_dir)
+            if not os.path.exists(input_dir):
+                os.makedirs(input_dir)
             nfiles = get_input(index, ind, data_dir, input_dir, hdr=gal_hdr)
             im_dir, wt_dir = input_dir, input_dir
 
@@ -458,7 +462,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 for outdir in [bg_model_dir, diff_dir, corr_dir]:
                     os.makedirs(outdir)
                 bg_model(im_dir, bg_model_dir, diff_dir, corr_dir, gal_hdr.hdrfile_ext, im_type=imtype, level_only=False)
-                im_dir = os.path.join(corr_dir, 'int')
+                im_dir = os.path.join(corr_dir, imtype)
 
 
             # WEIGHT IMAGES
@@ -476,7 +480,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # CREATE THE METADATA TABLES NEEDED FOR COADDITION
             weight_table = create_table(wt_dir, dir_type='weights')
-            weighted_table = create_table(im_dir, dir_type='int')
+            weighted_table = create_table(im_dir, dir_type=imtype)
 
 
             # COADD THE REPROJECTED, WEIGHTED IMAGES AND THE WEIGHT IMAGES WITH THE REGULAR HEADER FILE
@@ -485,12 +489,12 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             for outdir in [penultimate_dir, final_dir]:
                 os.makedirs(outdir)
             
-            coadd(gal_hdr.hdrfile, penultimate_dir, im_dir, output='int', add_type='mean')
-            coadd(gal_hdr.hdrfile, penultimate_dir, wt_dir, output='weights', add_type='mean')
+            coadd(gal_hdr.hdrfile, penultimate_dir, im_dir, output=imtype, add_type='mean')
+            coadd(gal_hdr.hdrfile, penultimate_dir, wt_dir, output=wttype, add_type='mean')
 
 
             # DIVIDE OUT THE WEIGHTS AND CONVERT TO MJY/SR
-            imagefile, wtfile = finish_weight(penultimate_dir)
+            imagefile, wtfile = finish_weight(penultimate_dir, imtype=imtype, wttype=wttype)
 
 
             #if convert_mjysr:
@@ -506,16 +510,16 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 shutil.copy(imagefile, outfile)
 
             # copy weights mosaic to final directory
-            shutil.copy(wtfile, os.path.join(final_dir, 'weights_mosaic.fits'))
+            shutil.copy(wtfile, os.path.join(final_dir, '{}_mosaic.fits'.format(wttype)))
 
 
             # COPY MOSAIC FILES TO CUTOUTS DIRECTORY
             mosaic_file = os.path.join(final_dir, 'final_mosaic.fits')
-            weight_file = os.path.join(final_dir, 'weights_mosaic.fits')
+            weight_file = os.path.join(final_dir, '{}_mosaic.fits'.format(wttype))
 
             newsuffs = ['.FITS', '_weight.FITS']
             oldfiles = [mosaic_file, weight_file]
-            newfiles = ['_'.join([name, band]).upper() + s for s in newsuffs]
+            newfiles = ['_'.join([pgcname, band]).upper() + s for s in newsuffs]
 
             for files in zip(oldfiles, newfiles):
                 shutil.copy(files[0], os.path.join(_MOSAIC_DIR, files[1]))
@@ -531,19 +535,19 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # WRITE OUT THE NUMBER OF TILES THAT OVERLAP THE GIVEN GALAXY
-            out_arr = [name, band.upper(), nfiles, np.around(total_time, 2)]
+            out_arr = [pgcname, band.upper(), nfiles, np.around(total_time, 2)]
             with open(numbers_file, 'a') as nfile:
                 nfile.write('{0: >10}'.format(out_arr[0]))
                 nfile.write('{0: >6}'.format(out_arr[1]))
                 nfile.write('{0: >6}'.format(out_arr[2]))
                 nfile.write('{0: >6}'.format(out_arr[3]) + '\n')
-                #nfile.write(name + ': ' + str(len(infiles)) + '\n')
+                #nfile.write(pgcname + ': ' + str(len(infiles)) + '\n')
 
         # SOMETHING WENT WRONG -- WRITE ERROR TO FILE
         except Exception as inst:
             me = sys.exc_info()[0]
             with open(problem_file, 'a') as myfile:
-                myfile.write(name + ': ' + str(me) + ': '+str(inst)+'\n')
+                myfile.write(pgcname + ': ' + str(me) + ': '+str(inst)+'\n')
             shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
@@ -597,7 +601,7 @@ def get_input(index, ind, data_dir, input_dir, hdr=None):
     return len(infiles)
         
 
-def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype='int', wttype='rrhr'):
+def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype='intbgsub', wttype='rrhr'):
     """
     Mask pixels in the input images
 
@@ -612,7 +616,6 @@ def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype='int', wtty
     wt_masked_dir : str
         Path to temp directory for this galaxy in which to store masked weight files
     """
-    #int_suff, rrhr_suff = '*_mjysr.fits', '*-rrhr.fits'
     int_suff, rrhr_suff = '*-{}.fits'.format(imtype), '*-{}.fits'.format(wttype)
     int_images = sorted(glob.glob(os.path.join(im_dir, int_suff)))
     rrhr_images = sorted(glob.glob(os.path.join(wt_dir, rrhr_suff)))
@@ -624,10 +627,10 @@ def mask_images(im_dir, wt_dir, im_masked_dir, wt_masked_dir, imtype='int', wtty
         image_outfile = os.path.join(im_masked_dir, os.path.basename(image_infile))
         wt_outfile = os.path.join(wt_masked_dir, os.path.basename(wt_infile))
 
-        mask_galex(image_infile, wt_infile, out_intfile=image_outfile, out_wtfile=wt_outfile)
+        mask_galex(image_infile, wt_infile, image_outfile, wt_outfile)
 
 
-def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_intfile=None, out_wtfile=None):
+def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_intfile, out_wtfile):
     """
     The actual masking routine. Selects pixels that are close to the edges of the chips
     or that have bad values, and masks them.
@@ -651,10 +654,6 @@ def mask_galex(intfile, wtfile, chip_rad=1400, chip_x0=1920, chip_y0=1920, out_i
         Path to output, masked weight file. If not included, it will default to replacing the input file name as
         '.fits' --> '_masked.fits' (Default: None)
     """
-    if out_intfile is None:
-        out_intfile = intfile.replace('.fits', '_masked.fits')
-    if out_wtfile is None:
-        out_wtfile = wtfile.replace('.fits', '_masked.fits')
 
     if not os.path.exists(out_intfile):
         # read in the data
@@ -719,7 +718,7 @@ def reproject_images(template_header, input_dir, reproj_dir, imtype, whole=True,
     montage.mImgtbl(reproj_dir, reprojected_table, corners=corners)
 
 
-def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='int', level_only=True):
+def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header, im_type='intbgsub', level_only=True):
     """
     Model the background for the mosaiced image
 
@@ -735,6 +734,8 @@ def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header,
         Path to directory inside bg_model_dir to hold the background corrected images
     template_header : ascii file
         Path to file containing the WCS to which we want to reproject our images
+    im_type : str
+        Type of image used (Default: intbgsub)
     level_only : bool, optional
         Montage argument: Adjust background levels only, don't try to fit the slope (Default: True)
     """
@@ -765,7 +766,7 @@ def bg_model(reprojected_dir, bg_model_dir, diff_dir, corr_dir, template_header,
                     proj_dir=reprojected_dir)
 
 
-def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imtype='-int', wttype='-rrhr'):
+def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imtype='intbgsub', wttype='rrhr'):
     """
     Weight the input images by a set of weights images
 
@@ -780,9 +781,12 @@ def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imty
     im_weight_dir : str
         Path to subdirectory containing the weighted images
     wt_weight_dir : str
-        Path to subdirectory containgn the weights images (same as before, they haven't changed)    
+        Path to subdirectory containgn the weights images (same as before, they haven't changed)
+    imtype : str, optional
+        Type of input image used (Default: intbgsub)
+    wttype : str, optional
+        Type of weight image used (Defaaut: rrhr)
     """
-    #im_suff, wt_suff = '*_mjysr.fits', '*-rrhr.fits'
     im_suff, wt_suff = '*-{}.fits'.format(imtype), '*-{}.fits'.format(wttype)
     imfiles = sorted(glob.glob(os.path.join(im_dir, im_suff)))
     wtfiles = sorted(glob.glob(os.path.join(wt_dir, wt_suff)))    
@@ -791,7 +795,7 @@ def weight_images(im_dir, wt_dir, weight_dir, im_weight_dir, wt_weight_dir, imty
     for i in range(len(imfiles)):
         # read in the data
         imfile = imfiles[i]
-        wtfile = os.path.join(os.path.dirname(wtfiles[i]), os.path.basename(imfile).replace('-int', '-rrhr'))
+        wtfile = os.path.join(os.path.dirname(wtfiles[i]), os.path.basename(imfile).replace(imtype, wttype))
         im, hdr = astropy.io.fits.getdata(imfile, header=True)
         rrhr, rrhrhdr = astropy.io.fits.getdata(wtfile, header=True)
 
@@ -824,7 +828,7 @@ def create_table(in_dir, dir_type=None):
     in_dir : str
         Path to directory containing the files
     dir_type : str, optional
-        type of file you are creating a table for, e.g., 'int, rrhr, wt' (Default: None)
+        type of file you are creating a table for, e.g., 'intbgsub, rrhr, wt' (Default: None)
 
     Returns
     -------
@@ -867,7 +871,7 @@ def coadd(template_header, output_dir, input_dir, output=None, add_type=None):
     montage.mAdd(reprojected_table, template_header, out_image, img_dir=img_dir, exact=True, type=add_type)
 
 
-def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_as=None):
+def finish_weight(output_dir, imtype='intbgsub', wttype='rrhr'):
     """
     Divide out the weights from the final image to get back to flux density units
 
@@ -881,8 +885,8 @@ def finish_weight(output_dir, convert_mjysr=True, band='fuv', gal_hdr=None, pix_
     newfile : str
         Path to new, mosaiced file
     """
-    image_file = os.path.join(output_dir, 'int_mosaic.fits')
-    wt_file = os.path.join(output_dir, 'weights_mosaic.fits')
+    image_file = os.path.join(output_dir, '{}_mosaic.fits'.format(imtype))
+    wt_file = os.path.join(output_dir, '{}_mosaic.fits'.format(wttype))
     
     im, hdr = astropy.io.fits.getdata(image_file, header=True)
     wt = astropy.io.fits.getdata(wt_file)
@@ -929,7 +933,7 @@ def counts2jy_galex(counts, cal, pix_as):
     return val
 
 
-def convert_to_flux_input(indir, outdir, band, pix_as, imtype='int'):
+def convert_to_flux_input(indir, outdir, band, pix_as, imtype='intbgsub'):
     infiles = sorted(glob.glob(os.path.join(indir, '*-{}.fits'.format(imtype))))
     for infile in infiles:
         data, hdr = astropy.io.fits.getdata(infile, header=True)

@@ -11,14 +11,14 @@ _GALDATA_DIR = '/n/home00/lewis.1590/research/galbase/gal_data/'
 def get_args():
     """ Get command line arguments """
     parser = argparse.ArgumentParser(description='Create cutouts of a given size around each galaxy center.')
-    parser.add_argument('--imtype', default='int', help='input images to use. Default: int')
+    parser.add_argument('--imtype', default='intbgsub', help='input images to use. Default: intbgsub')
     parser.add_argument('--wttype', default='rrhr', help='images to use for the weighting. Default: rrhr')
     parser.add_argument('--size', default=30, help='cutout size in arcminutes. Default: 30.')
     parser.add_argument('--desired_pix_scale', default=1.5, help='desired pixel scale of output image. Default: 1.5 (GALEX)')
     parser.add_argument('--band', default=None, help='waveband. Default: None (does all)')
     parser.add_argument('--model_bg', default=True, help='model the background to match all images as best as possible. Default: True')
     parser.add_argument('--weight_ims', default=True, help='weight the input images by the desired weight images. Default: True')
-    parser.add_argument('--convert_mjysr', action='store_true', help='set to convert images to MJy/sr. Default: False')
+    parser.add_argument('--convert_mjysr', default=True, help='convert images to MJy/sr. Default: True')
     parser.add_argument('--galaxy_list', default=None, nargs='+', help='Galaxy name if doing a single cutout or list of names. Default: None')
     parser.add_argument('--all_galaxies', action='store_true', help='run all galaxies in database. Default: False; include flag to store_true')
     parser.add_argument('--tag', default=None, help='tag to select galaxies, i.e., SINGS, HERACLES, etc. Default: None')
@@ -32,7 +32,7 @@ def main(**kwargs):
     Parameters
     ----------
     imtype : str
-        input image type to use from galex (Default: int)
+        input image type to use from galex (Default: intbgsub)
     wttype : str
         input weights image type to use from galex (Default: rrhr)
     size : float
@@ -42,15 +42,15 @@ def main(**kwargs):
     band : str
         the band in which the cutout is made, either a single band or a list (Default: fuv)
     model_bg : bool
-        model the background in Montage
+        model the background in Montage (Default: True)
     weight_ims : bool
-        weight the input images with the weights images
+        weight the input images with the weights images (Default: True)
     convert_mjysr : bool
-        convert input images from counts/sec to MJy/sr
+        convert input images from counts/sec to MJy/sr (Default: True)
     galaxy_list : list
         list of one or more galaxies for which to make cutouts. Do not set if you want to make cutouts for all galaxies (Default: None)
     all_galaxies : bool
-        Make cutouts for all galaxies in the galbase
+        Make cutouts for all galaxies in the galbase (Default: False)
     tag : str
         A tag to select a subset of galaxies; i.e., SINGS, HERACLES, etc. (Default: None)
     inds : int
@@ -62,13 +62,13 @@ def main(**kwargs):
     modeled backgrounds, images weighted by the exposure time, and converted to MJy/sr
 
     Usage:
-    %run make_cutouts.py --size 30 --band fuv --convert_mjysr --tag SINGS
-    (the model_bg and weight_ims flags do not need to be explicitly set as they are True by default)
+    %run make_cutouts.py --size 30 --band fuv --tag SINGS
+    (the model_bg, weight_ims, and convert_mjysr flags do not need to be explicitly set as they are True by default)
 
     or
 
     import make_cutouts
-    make_cutouts.main(size=30, band='fuv', convert_mjysr=True, tag='SINGS')
+    make_cutouts.main(size=30, band='fuv', tag='SINGS')
     """
 
     warnings.filterwarnings('ignore')
