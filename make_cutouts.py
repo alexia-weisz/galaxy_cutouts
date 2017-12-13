@@ -1,5 +1,4 @@
 import numpy as np
-#import config
 import gal_data
 import extract_stamp
 import warnings
@@ -7,7 +6,6 @@ import argparse
 from pdb import set_trace
 
 
-#_TEST_WRITE_DIR = '/n/home00/lewis.1590/research/galbase_allsky/cutouts/'
 _GALDATA_DIR = '/n/home00/lewis.1590/research/galbase/gal_data/'
 
 def get_args():
@@ -64,17 +62,19 @@ def main(**kwargs):
     modeled backgrounds, images weighted by the exposure time, and converted to MJy/sr
 
     Usage:
-    %run make_cutouts.py --size 30 --band fuv --model_bg --weight_ims --convert_mjysr --tag SINGS
+    %run make_cutouts.py --size 30 --band fuv --convert_mjysr --tag SINGS
     (the model_bg and weight_ims flags do not need to be explicitly set as they are True by default)
 
     or
 
     import make_cutouts
-    make_cutouts.main(size=30, band='fuv', model_bg=True, weight_ims=True, convert_mjysr=True, tag='SINGS')
+    make_cutouts.main(size=30, band='fuv', convert_mjysr=True, tag='SINGS')
     """
 
     warnings.filterwarnings('ignore')
     wband = kwargs['band']
+    if kwargs['inds']:
+        kwargs['all_galaxies'] = True
 
     #get data from galbase
     gals = gal_data.gal_data(names=kwargs['galaxy_list'], data=None, all=kwargs['all_galaxies'], 

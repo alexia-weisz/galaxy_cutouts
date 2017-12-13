@@ -3,7 +3,6 @@ import astropy.io.fits
 import astropy.wcs
 import montage_wrapper as montage
 from matplotlib.path import Path
-#import sewpy
 import os
 import sys
 import shutil
