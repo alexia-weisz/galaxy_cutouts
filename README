@@ -32,8 +32,8 @@ OR
 
 
 Optional arguments are
---imtype IMTYPE - input image type to use. Default is `int' but you will want to change to `intbgsub'
---wttype WTTYPE - weight image type to use. Default is `rrhr'. This will probably not change.
+--imtype IMTYPE - input image type to use. Default is `intbgsub'
+--wttype WTTYPE - weight image type to use. Default is `rrhr'
 --size SIZE - cutout size in arcminutes. Default is 30. The cutouts will be square.
 --desired_pix_scale DESIRED_PIX_SCALE -- desired pixel scale of output image. Default is 1.5, which is the GALEX pixel scale.
 --band BAND - GALEX band to use (fuv or nuv). If you don't specify the band, it will automatically do both fuv and nuv.
