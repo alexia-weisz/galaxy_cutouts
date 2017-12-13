@@ -20,8 +20,8 @@ _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
 _WISE_DIR = os.path.join(_TOP_DIR, 'unwise', 'atlas')
 
 # directories to do the work in
-#_WORK_DIR = '/data/tycho/0/leroy.42/allsky/galex/atlas'
-_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
+_WORK_DIR = '/data/tycho/0/leroy.42/allsky/galex/atlas'
+#_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
 _MOSAIC_DIR = os.path.join(_WORK_DIR, 'cutouts')
 
 # CALIBRATION FROM GALEX COUNTS TO ABMAG
@@ -362,9 +362,8 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
     """
     ttype = 'galex'
     data_dir = os.path.join(_TOP_DIR, ttype, 'sorted_tiles')
-    problem_file = os.path.join(_WORK_DIR, 'problem_galaxies_{}.txt'.format(band))# 'problem_galaxies_' + band + '.txt')
-    #bg_reg_file = os.path.join(_WORK_DIR, 'galex_reprojected_bg.reg')
-    numbers_file = os.path.join(_WORK_DIR, 'gal_reproj_info_{}.txt'.format(band))# 'gal_reproj_info_' + band + '.dat')
+    problem_file = os.path.join(_WORK_DIR, 'problem_galaxies_{}.txt'.format(band))
+    numbers_file = os.path.join(_WORK_DIR, 'gal_reproj_info_{}.txt'.format(band))
 
     galaxy_mosaic_file = os.path.join(_MOSAIC_DIR, '_'.join([pgcname, band]).upper() + '.FITS')
 
@@ -420,7 +419,6 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
             input_table = os.path.join(im_dir, 'input.tbl')
             montage.mImgtbl(im_dir, input_table, corners=True)
            
-            #set_trace()
             if convert_mjysr:
                 converted_dir = os.path.join(gal_dir, 'converted')
                 if not os.path.exists(converted_dir):
@@ -495,21 +493,11 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
             # DIVIDE OUT THE WEIGHTS AND CONVERT TO MJY/SR
             imagefile, wtfile = finish_weight(penultimate_dir, imtype=imtype, wttype=wttype)
+                
 
-
-            #if convert_mjysr:
-            #    convert_to_flux_final(imagefile, band, desired_pix_scale)
-
-            
-            # SUBTRACT OUT THE BACKGROUND
-            rm_overall_bg = False
-            if rm_overall_bg:
-                remove_background(final_dir, imagefile, bg_reg_file)
-            else:
-                outfile = os.path.join(final_dir, 'final_mosaic.fits')
-                shutil.copy(imagefile, outfile)
-
-            # copy weights mosaic to final directory
+            # COPY IMAGE AND WEIGHTS MOSAIC TO FINAL DIRECTORY
+            outfile = os.path.join(final_dir, 'final_mosaic.fits')
+            shutil.copy(imagefile, outfile)
             shutil.copy(wtfile, os.path.join(final_dir, '{}_mosaic.fits'.format(wttype)))
 
 
@@ -526,7 +514,7 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
 
 
             # REMOVE TEMP GALAXY DIRECTORY AND EXTRA FILES
-            #shutil.rmtree(gal_dir, ignore_errors=True)
+            shutil.rmtree(gal_dir, ignore_errors=True)
 
 
             # NOTE TIME TO FINISH
@@ -541,14 +529,14 @@ def galex(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name
                 nfile.write('{0: >6}'.format(out_arr[1]))
                 nfile.write('{0: >6}'.format(out_arr[2]))
                 nfile.write('{0: >6}'.format(out_arr[3]) + '\n')
-                #nfile.write(pgcname + ': ' + str(len(infiles)) + '\n')
+
 
         # SOMETHING WENT WRONG -- WRITE ERROR TO FILE
         except Exception as inst:
             me = sys.exc_info()[0]
             with open(problem_file, 'a') as myfile:
                 myfile.write(pgcname + ': ' + str(me) + ': '+str(inst)+'\n')
-            #shutil.rmtree(gal_dir, ignore_errors=True)
+            shutil.rmtree(gal_dir, ignore_errors=True)
 
     return
 
@@ -952,105 +940,3 @@ def convert_to_flux_final(mosaicfile, band, pix_as):
 
     newfile = os.path.join(os.path.dirname(mosaicfile), 'image_mosaic_mjysr.fits')
     astropy.io.fits.writeto(newfile, newim, hdr)
-
-
-
-# ------------------ #
-## UNUSED functions ##
-# ------------------ #
-def remove_background(final_dir, imfile, bgfile):
-    """
-    Remove a background from the mosaiced image
-
-    Parameters
-    ----------
-    final_dir : str
-        Path to directory that will contain the final image
-    imfile : str
-        Path to file from which you want to remove a background
-    bgfile : str 
-        Path to file from which to calculate a background
-    """
-    # read in the data
-    data, hdr = astropy.io.fits.getdata(imfile, header=True)
-    box_inds = read_bg_regfile(bgfile)
-
-    # calculate a background from the background file
-    allvals = []
-    sample_means = []
-    for box in box_inds:
-        rectangle = zip(box[0::2], box[1::2])
-        sample = get_bg_sample(data, hdr, rectangle)
-        for s in sample:
-            allvals.append(s)
-        sample_mean = np.nanmean(sample)
-        sample_means.append(sample_mean)
-    this_mean = np.around(np.nanmean(sample_means), 8)
-
-    # subtract the background from the data
-    final_data = data - this_mean
-
-    # write the subtracted background file to the header for future use
-    hdr['BG'] = this_mean
-    hdr['comment'] = 'Background has been subtracted.'
-
-    # write out the background-subtracted file
-    outfile = os.path.join(final_dir, 'final_mosaic.fits')
-    astropy.io.fits.writeto(outfile, final_data, hdr)
-
-
-def read_bg_regfile(regfile):
-    """
-    Read the background region file (ds9 .reg file) and return the regions in which to calculate a background
-
-    Parameters
-    ----------
-    regfile : str
-        Path to file containing the regions in which to calculate a background
-
-    Returns
-    -------
-    box_list : list
-        List of data points that define the region in which to calculate a background
-    """
-    f = open(regfile, 'r')
-    boxes = f.readlines()
-    f.close()
-    box_list = []
-    for b in boxes:
-        this_box = []
-        box = b.strip('polygon()\n').split(',')
-        [this_box.append(int(np.around(float(bb), 0))) for bb in box]
-        box_list.append(this_box)
-    return box_list
-
-
-def get_bg_sample(data, hdr, box):
-    """
-    Determine the background sample in each reigon
-
-    Parameters
-    ----------
-    data : float
-        Input data
-    hdr : FITS WCS
-        header of input file containing WCS information
-    box : np.2darray
-        Numpy 2D array containing x,y coordinates of the box in which to determine the background
-
-    Returns
-    -------
-    sample : float
-        The data that lie within the region in which you want to calculate the background
-    """
-    wcs = astropy.wcs.WCS(hdr, naxis=2)
-    x, y = np.arange(data.shape[0]), np.arange(data.shape[1])
-    X, Y = np.meshgrid(x, y, indexing='ij')
-    xx, yy = X.flatten(), Y.flatten()
-    pixels = np.array(zip(yy, xx))
-    box_coords = box
-    sel = Path(box_coords).contains_points(pixels)
-    sample = data.flatten()[sel]
-    return sample
-
-
