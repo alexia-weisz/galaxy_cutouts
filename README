@@ -43,9 +43,10 @@ Optional arguments are
 --galaxy_list GALAXY_LIST -- Specify the galaxies for which you want to make cutouts. E.g., --galaxy_list NGC0300 NGC0628 NGC2976
 --all_galaxies -- Include the arguemnt --all_galaxies if you want to make cutouts of all the galaxies
 --tag TAG -- the tag to use to specify a group in the galbase, e.g., --tag SINGS
+--inds IND1 IND2 -- the start and stop indices to use for indexing the gals array. 
 
 
-Right now, you must include one of --galaxy_list, --all_galaxies, --tag
+Right now, you must include one of --galaxy_list, --all_galaxies, --tag, --inds IND1 IND2
 
 
 Examples:
