@@ -51,14 +51,14 @@ Right now, you must include one of --galaxy_list, --all_galaxies, --tag, --inds 
 
 Examples:
 ---------
-python make_cutouts.py --size 45 --band fuv --convert_mjysr --tag SINGS
+python make_cutouts.py --size 45 --band fuv --tag SINGS
 
-%run make_cutouts.py --size 45 --band fuv --convert_mjysr --tag SINGS
+%run make_cutouts.py --size 45 --band fuv --tag SINGS
 
 
-python make_cutouts.py --band fuv --galaxy_list NGC0300 NGC0628 NGC2976 NGC6744 --convert_mjysr --model_bg False
+python make_cutouts.py --band fuv --galaxy_list NGC0300 NGC0628 NGC2976 NGC6744 --model_bg False
 
-%run make_cutouts.py --band fuv --galaxy_list NGC0300 NGC0628 NGC2976 NGC6744 --convert_mjysr --model_bg False
+%run make_cutouts.py --band fuv --galaxy_list NGC0300 NGC0628 NGC2976 NGC6744 --model_bg False
 
 
 
