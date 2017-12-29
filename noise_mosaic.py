@@ -26,8 +26,8 @@ _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
 _WISE_DIR = os.path.join(_TOP_DIR, 'unwise', 'atlas')
 
 # directories to do the work in
-#_WORK_DIR = '/data/tycho/0/leroy.42/allsky/galex/atlas'
-_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
+_WORK_DIR = '/data/tycho/0/leroy.42/allsky/galex/atlas'
+#_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
 _MOSAIC_DIR = os.path.join(_WORK_DIR, 'cutouts')
 
 # CALIBRATION FROM GALEX COUNTS TO ABMAG
@@ -292,7 +292,7 @@ class GalaxyHeader(object):
 
 def make_mosaic(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None, name=None, pgcname=None, model_bg=True, weight_ims=True, convert_mjysr=True, desired_pix_scale=GALEX_PIX_AS, imtype='intbgsub', wttype='rrhr', window=False):
     """
-    Create cutouts of a galaxy in a single GALEX band.
+    Create noise of a galaxy in a single GALEX band.
 
     Parameters
     ----------
@@ -322,6 +322,8 @@ def make_mosaic(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None
         input image type to use from galex (Default: int)
     wttype : str, optional
         input weights image type to use from galex (Default: rrhr)
+    window : bool, optional
+        window across the input images rather than use a single value
     """
     ttype = 'galex'
     data_dir = os.path.join(_TOP_DIR, ttype, 'sorted_tiles')
@@ -658,6 +660,28 @@ def mask_galex(intfile, wtfile, out_intfile, out_wtfile, chip_rad=1400, chip_x0=
 
 
 def calc_noise(gal_dir, this_noise_dir, gal_hdr, mosaic_file, imtype, wttype, noisetype, window=False):
+    """
+    Calculate noise values and generate noise mosaic for each galaxy
+
+    Parameters:
+    -----------
+    gal_dir : str path
+        Path to temporary directory in which mosaic work is being done
+    this_noise_dir : str path
+        Path to directory within gal_dir where the noise work is completed
+    gal_hdr : ascii file
+        File containing the WCS data for each galaxy
+    mosaic_file : str path
+        Noise mosaic file that will be created
+    imtype : str
+        Type of input images to be used; e.g., 'int', 'intbgsub'
+    wttype : str
+        Type of weight images to be used; e.g., 'rrhr'
+    noisetype : str
+        Label for noise images; e.g., 'noise'
+    window : bool
+        Window across input images for pixel-by-pixel noise calculation; Default: False
+    """
 
     # locate the input files from which to calculate noise
     input_noise_dir, imfiles = gather_input_images(gal_dir, this_noise_dir, imtype)
@@ -739,6 +763,25 @@ def calc_noise(gal_dir, this_noise_dir, gal_hdr, mosaic_file, imtype, wttype, no
 
 
 def gather_input_images(gal_dir, this_noise_dir, imtype):
+    """
+    Gather the input images for noise creation into new input directory within the noise directory
+    
+    Parameters:
+    -----------
+    gal_dir : str path
+        Path to temporary directory in which mosaic work is being done
+    this_noise_dir : str path
+        Path to directory within gal_dir where the noise work is completed
+    imtype : str
+        Type of input images to be used; e.g., 'int', 'intbgsub'
+
+    Returns:
+    --------
+    input_noise_dir : str
+        Path to location of input noise files
+    imfiles : str
+        List of input files
+    """
     im_dir = os.path.join(gal_dir, 'masked', imtype)
     imfiles = sorted(glob.glob(os.path.join(im_dir, '*-{}.fits'.format(imtype))))
 
@@ -750,6 +793,22 @@ def gather_input_images(gal_dir, this_noise_dir, imtype):
 
 
 def get_window_val(imfile, input_noise_dir, imtype, noisetype, outfile=None):
+    """
+    Get the noise value for each pixel within the desired window.
+
+    Parameters:
+    -----------
+    imfiles : str
+        List of input files for noise calculation
+    input_noise_dir : str
+        Path to location of input noise files
+    imtype : str
+        Type of input images to be used; e.g., 'int', 'intbgsub'
+    noisetype : str
+        Label for noise images; e.g., 'noise'
+    outfile : str, optional
+        Path to new file that contians noise data for each input file. Will be created if not specified.
+    """
     data, hdr = astropy.io.fits.getdata(imfile, header=True)
     sel = np.isnan(data)
     newdata = window(data, size=WINDOW_SIZE)
@@ -760,15 +819,45 @@ def get_window_val(imfile, input_noise_dir, imtype, noisetype, outfile=None):
 
 
 def window(data, size=WINDOW_SIZE):
+    """
+    Calculate the noise value for each pixel by taking the standard deviation of all pixels in a window of WINDOW_SIZE.
+    
+    Parameters:
+    -----------
+    data : float array
+        input data read from fits file
+    size : int
+        size of window; Default. 30
+
+    Returns:
+    --------
+    data_std : float array
+        The standard deviation of the input data pixel-by-pixel
+    """
     def local_std(A):
         return np.nanstd(A)
 
-    #mean_window = copy.deepcopy(data)#np.empty_like(data, dtype='float') # create array to hold noise result
     data_std = sp.filters.generic_filter(data, local_std, size=size)
     return data_std
 
 
 def get_single_val(imfile, input_noise_dir, imtype, noisetype, outfile=None):
+    """
+    Get the single noise value for each input image by taking the standard devation of the image.
+
+    Parameters:
+    -----------
+    imfiles : str
+        List of input files for noise calculation
+    input_noise_dir : str
+        Path to location of input noise files
+    imtype : str
+        Type of input images to be used; e.g., 'int', 'intbgsub'
+    noisetype : str
+        Label for noise images; e.g., 'noise'
+    outfile : str, optional
+        Path to new file that contians noise data for each input file. Will be created if not specified.
+    """
     data, hdr = astropy.io.fits.getdata(imfile, header=True)
     newdata = single_value(data)
     if outfile is None:
@@ -777,6 +866,19 @@ def get_single_val(imfile, input_noise_dir, imtype, noisetype, outfile=None):
 
 
 def single_value(data):
+    """
+    Calculate the noise value for each pixel by taking the standard deviation of all pixels in a window of WINDOW_SIZE.
+    
+    Parameters:
+    -----------
+    data : float array
+        input data read from fits file
+
+    Returns:
+    --------
+    newdata : float array
+        The single std deviation of the entire image in an array.
+    """
     sel = ~np.isnan(data)
     data_std = np.nanstd(data)
     newdata = np.zeros(data.shape)
@@ -786,6 +888,23 @@ def single_value(data):
 
 
 def gather_weight_images(gal_dir, this_noise_dir, wttype):
+    """
+    Gather the weight images used to weight the input files in creation of noise mosaic.
+
+    Parameters:
+    -----------
+    gal_dir : str path
+        Path to temporary directory in which mosaic work is being done
+    this_noise_dir : str path
+        Path to directory within gal_dir where the noise work is completed
+    wttype : str
+        Type of weoght images to be used; e.g., 'rrhr'
+
+    Returns:
+    --------
+    input_noise_wt_dir : str
+        Path to location of input noise weight files
+    """
     input_noise_wt_dir = os.path.join(this_noise_dir, 'input', 'rrhr')
     if not os.path.exists(input_noise_wt_dir):
         os.makedirs(input_noise_wt_dir)
@@ -801,6 +920,29 @@ def gather_weight_images(gal_dir, this_noise_dir, wttype):
 
 
 def make_dirs(this_noise_dir, imtype, wttype, dirtype='reprojected'):
+    """
+    Make directories inside noise directory 
+
+    Parameters: 
+    -----------
+    this_noise_dir : str path
+        Path to directory within gal_dir where the noise work is completed
+    imtype : str
+        Type of input images to be used; e.g., 'int', 'intbgsub'
+    wttype : str
+        Type of weight images to be used; e.g., 'rrhr'
+    dirtype : str
+        Name to describe directory
+
+    Returns:
+    --------
+    noise_dir : str
+        Path to newly created directory
+    noise_im_dir : str
+        Path to im directory within noise_dir
+    noise_wt_dir : str
+        Path to weight directory within noise_dir
+    """
     noise_dir = os.path.join(this_noise_dir, dirtype)
     noise_im_dir = os.path.join(noise_dir, imtype)
     noise_wt_dir = os.path.join(noise_dir, wttype)
@@ -911,6 +1053,24 @@ def weight_images(im_dir, wt_dir, weight_dir, imtype='-int', wttype='-rrhr', noi
 
 
 def square_images(this_noise_dir, im_dir, noisetype):
+    """
+    Square the reprojected, weighted images
+
+    Parameters:
+    -----------
+    this_noise_dir : str
+        Path to directory within gal_dir where the noise work is completed
+    im_dir : str
+        Path to directory containing the reprojected, weighted images
+    noisetype : str
+        Label for noise images; e.g., 'noise'
+
+    Returns:
+    --------
+    reproj_square_dir : str
+        Path to directory containing the squared images
+
+    """
     reproj_square_dir = os.path.join(this_noise_dir, 'reprojected_weighted_squared')
     if not os.path.exists(reproj_square_dir):
         os.makedirs(reproj_square_dir)
@@ -953,9 +1113,6 @@ def coadd(template_header, output_dir, input_dir, reprojected_table, output='noi
     #reprojected_table = os.path.join(input_dir, output_type + '_reprojected.tbl')
     out_image = os.path.join(output_dir, output + '_mosaic.fits')
     montage.mAdd(reprojected_table, template_header, out_image, img_dir=input_dir, exact=True, type=add_type)
-
-
-
 
 
 
@@ -1009,20 +1166,23 @@ def main(**kwargs):
         A tag to select a subset of galaxies; i.e., SINGS, HERACLES, etc. (Default: None)
     inds : int
         List of two ints to index the galaxy array from [int1:int2]
+    window : bool
+        Use a window across each input image to calculate pixel-by-pixel noise instead of single value for entire image
 
     Example:
     This code can be run from the command line or imported and run within a separate program.
-    The following example creates cutouts of the SINGS sample that are 30x30 arcminutes in the FUV with 
-    modeled backgrounds, images weighted by the exposure time, and converted to MJy/sr
+    The following example creates noise mosaics of the SINGS sample that are 30x30 arcminutes 
+    in the FUV using a single standard deviation for each input image rather than pixel-by-pixel.
 
     Usage:
-    %run make_cutouts.py --size 30 --band fuv --tag SINGS
-    (the model_bg, weight_ims, and convert_mjysr flags do not need to be explicitly set as they are True by default)
+    %run noise_mosaics.py --band fuv --tag SINGS
 
     or
 
-    import make_cutouts
-    make_cutouts.main(size=30, band='fuv', tag='SINGS')
+    import noise_mosaics
+    noise_mosaics.main(size=30, band='fuv', tag='SINGS')
+
+    To get pixel-by-pixel noise, use the --window flag in the first call or window=True in the second.
     """
 
     warnings.filterwarnings('ignore')
