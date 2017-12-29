@@ -928,7 +928,7 @@ def square_images(this_noise_dir, im_dir, noisetype):
         try:
             astropy.io.fits.writeto(imfile, newdata, hdr, overwrite=True)
         except:
-            astropy.io.fits.writeto(infile, newdata, hdr, clobber=True)
+            astropy.io.fits.writeto(imfile, newdata, hdr, clobber=True)
 
     return reproj_square_dir
 
