@@ -8,7 +8,9 @@ import sys
 import shutil
 import glob
 import time
-
+import argparse
+import warnings
+import gal_data
 import scipy.ndimage as sp
 
 from pdb import set_trace
@@ -24,8 +26,8 @@ _INDEX_DIR = os.path.join(_TOP_DIR, 'z0mgs/')
 _WISE_DIR = os.path.join(_TOP_DIR, 'unwise', 'atlas')
 
 # directories to do the work in
-_WORK_DIR = '/data/tycho/0/leroy.42/allsky/galex/atlas'
-#_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
+#_WORK_DIR = '/data/tycho/0/leroy.42/allsky/galex/atlas'
+_WORK_DIR = '/data/tycho/0/lewis.1590/atlas/'
 _MOSAIC_DIR = os.path.join(_WORK_DIR, 'cutouts')
 
 # CALIBRATION FROM GALEX COUNTS TO ABMAG
