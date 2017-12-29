@@ -410,7 +410,7 @@ def make_mosaic(band='fuv', ra_ctr=None, dec_ctr=None, size_deg=None, index=None
 
             # CALCULATE NOISE AND GENERATE NOISE MOSAIC CUTOUT
             noisetype = 'noise'
-            calc_noise(gal_dir, noise_dir, galaxy_noise_file, imtype, wttype, noisetype, window=window)
+            calc_noise(gal_dir, noise_dir, gal_hdr, galaxy_noise_file, imtype, wttype, noisetype, window=window)
 
 
             # REMOVE TEMP GALAXY DIRECTORY AND EXTRA FILES
@@ -657,7 +657,7 @@ def mask_galex(intfile, wtfile, out_intfile, out_wtfile, chip_rad=1400, chip_x0=
         astropy.io.fits.writeto(out_wtfile, wt, whdr)
 
 
-def calc_noise(gal_dir, this_noise_dir, mosaic_file, imtype, wttype, noisetype, window=False):
+def calc_noise(gal_dir, this_noise_dir, gal_hdr, mosaic_file, imtype, wttype, noisetype, window=False):
 
     # locate the input files from which to calculate noise
     input_noise_dir, imfiles = gather_input_images(gal_dir, this_noise_dir, imtype)
@@ -682,8 +682,8 @@ def calc_noise(gal_dir, this_noise_dir, mosaic_file, imtype, wttype, noisetype, 
 
     # reproject the noise and weight images
     print('...reprojecting...')
-    reproject_images(hdr_ext, im_dir, reproj_noise_im_dir, noisetype)
-    reproject_images(hdr_ext, wt_dir, reproj_noise_wt_dir, '{}_weight'.format(noisetype))
+    reproject_images(gal_hdr.hdrfile_ext, im_dir, reproj_noise_im_dir, noisetype)
+    reproject_images(gal_hdr.hdrfile_ext, wt_dir, reproj_noise_wt_dir, '{}_weight'.format(noisetype))
     im_dir = reproj_noise_im_dir
     wt_dir = reproj_noise_wt_dir
 
@@ -716,9 +716,9 @@ def calc_noise(gal_dir, this_noise_dir, mosaic_file, imtype, wttype, noisetype, 
         os.makedirs(mosaic_noise_dir)
 
     print('...coadding...')
-    coadd(hdr_final, mosaic_noise_dir, im_dir, reproj_noise_im_tbl, output='{}_im_squared_weighted'.format(noisetype), add_type='mean')
-    coadd(hdr_final, mosaic_noise_dir, im_dir, reproj_noise_im_tbl, output='count', add_type='count')
-    coadd(hdr_final, mosaic_noise_dir, wt_dir, reproj_noise_wt_tbl, output='{}_wt_weighted'.format(noisetype), add_type='mean')
+    coadd(gal_hdr.hdrfile, mosaic_noise_dir, im_dir, reproj_noise_im_tbl, output='{}_im_squared_weighted'.format(noisetype), add_type='mean')
+    coadd(gal_hdr.hdrfile, mosaic_noise_dir, im_dir, reproj_noise_im_tbl, output='count', add_type='count')
+    coadd(gal_hdr.hdrfile, mosaic_noise_dir, wt_dir, reproj_noise_wt_tbl, output='{}_wt_weighted'.format(noisetype), add_type='mean')
 
 
     # multiply the coadded squared image by the numbers in the count image to back out of the 'mean'
