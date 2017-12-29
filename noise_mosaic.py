@@ -672,7 +672,7 @@ def calc_noise(gal_dir, this_noise_dir, mosaic_file, imtype, wttype, noisetype, 
 
     # gather weight images 
     print('...moving weight images...')
-    input_noise_wt_dir = gather_weight_images(this_noise_dir, wttype)
+    input_noise_wt_dir = gather_weight_images(gal_dir, this_noise_dir, wttype)
     im_dir = input_noise_dir
     wt_dir = input_noise_wt_dir
 
@@ -785,7 +785,7 @@ def single_value(data):
     return newdata
 
 
-def gather_weight_images(this_noise_dir, wttype):
+def gather_weight_images(gal_dir, this_noise_dir, wttype):
     input_noise_wt_dir = os.path.join(this_noise_dir, 'input', 'rrhr')
     if not os.path.exists(input_noise_wt_dir):
         os.makedirs(input_noise_wt_dir)
